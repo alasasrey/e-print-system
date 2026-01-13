@@ -42,6 +42,17 @@ export default function RegisterScreen() {
                         <Text style={styles.buttonText}>Register as Student</Text>
                     </TouchableOpacity>
                 </View>
+
+                {/* REMEMBER: THIS IS JUST A TEST CODE FOR ROUTING TO OTHER FILES 
+            PLEASE DELETE THIS CODE IF YOU ARE DONE!!!!!!!
+             */}
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => router.replace("/(tabs)/manager/dashboard")}
+                >
+                    <Text style={styles.buttonText}>manager dashboard</Text>
+                </TouchableOpacity>
+
             </View>
         </ScrollView>
     );

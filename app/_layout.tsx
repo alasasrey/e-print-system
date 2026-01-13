@@ -6,10 +6,13 @@ export default function Layout() {
     //TODO: MAKE THE headerShown: false IF YOU ARE DONE WITH TESTING!!!
     <Stack screenOptions={{ headerShown: true }}>
       <Stack.Screen name="index" options={{ title: "Login" }} />
-      <Stack.Screen name="student/home" options={{ title: "Home" }} />
-      <Stack.Screen name="student/submitJob" options={{ title: "Submit Job" }} />
-      <Stack.Screen name="student/orders" options={{ title: "My Orders" }} />
-      <Stack.Screen name="student/profile" options={{ title: "Profile" }} />
+      <Stack.Screen name="(tabs)/student/home" options={{ title: "Home" }} />
+      <Stack.Screen name="(tabs)/student/submitJob" options={{ title: "Submit Job" }} />
+      <Stack.Screen name="(tabs)/student/orders" options={{ title: "My Orders" }} />
+      <Stack.Screen name="(tabs)/student/profile" options={{ title: "Profile" }} />
+      <Stack.Screen name="(tabs)/manager/dashboard" options={{ title: "Manager Dashboard" }} />
+      <Stack.Screen name="(tabs)/manager/orders" options={{ title: "Manager Orders" }} />
+      <Stack.Screen name="(tabs)/manager/settings" options={{ title: "Manager Settings" }} />
     </Stack>
   );
 }
