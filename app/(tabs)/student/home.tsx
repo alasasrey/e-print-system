@@ -1,0 +1,71 @@
+import { Ionicons } from '@expo/vector-icons';
+import { router } from "expo-router";
+import React from "react";
+import { ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { styles } from "../../../styles/studentStyles";
+
+export default function HomeScreen() {
+    return (
+        <View style={{ flex: 1 }}>
+            <ScrollView style={styles.homeBg}>
+                <View style={styles.homePadding}>
+                    <Text style={styles.welcomeText}>Welcome, student!</Text>
+                    <Text style={styles.subWelcome}>Find print shops and submit your documents</Text>
+
+                    <View style={styles.row}>
+                        <TouchableOpacity style={styles.mainActionCard} onPress={() => router.push("/(tabs)/student/submitJob")}>
+                            <Ionicons name="cloud-upload-outline" size={24} color="white" />
+                            <Text style={styles.mainActionText}>Submit Job</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.secondaryActionCard} onPress={() => router.push("/(tabs)/student/orders")}>
+                            <Ionicons name="document-text-outline" size={24} color="#333" />
+                            <Text style={styles.secondaryActionText}>My Orders</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.searchContainer}>
+                        <Ionicons name="search" size={18} color="#888" />
+                        <TextInput placeholder="Search for print shops..." style={styles.searchInput} />
+                    </View>
+
+                    <Text style={styles.sectionTitle}>Available Print Shops</Text>
+
+                    <View style={styles.shopCard}>
+                        <Text style={styles.shopName}>QuickPrint Express</Text>
+                        <View style={styles.ratingRow}>
+                            <Ionicons name="star" size={14} color="#FFD700" />
+                            <Text style={styles.ratingText}>4.8</Text>
+                            <View style={styles.statusBadge}><Text style={styles.statusText}>active</Text></View>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Ionicons name="location" size={12} color="#666" />
+                            <Text style={styles.shopInfo}>Main Campus Building A, Room 101</Text>
+                        </View>
+                        <TouchableOpacity style={styles.submitDocButton} onPress={() => router.push("/(tabs)/student/submitJob")}>
+                            <Text style={styles.submitDocText}>Submit Document</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </ScrollView>
+
+            <View style={styles.bottomNav}>
+                <TouchableOpacity style={styles.navItemActive}>
+                    <Ionicons name="home" size={24} color="white" />
+                    <Text style={styles.navTextActive}>Home</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.navItem} onPress={() => router.push("/(tabs)/student/submitJob")}>
+                    <Ionicons name="cloud-upload-outline" size={24} color="#888" />
+                    <Text style={styles.navText}>Submit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.navItem} onPress={() => router.push("/(tabs)/student/orders")}>
+                    <Ionicons name="list" size={24} color="#888" />
+                    <Text style={styles.navText}>Orders</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.navItem} onPress={() => router.push("/(tabs)/student/profile")}>
+                    <Ionicons name="person-outline" size={24} color="#888" />
+                    <Text style={styles.navText}>Profile</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
+}
