@@ -31,9 +31,15 @@ export default function ManagerDashboardScreen() {
                         <Text style={{ fontWeight: 'bold', fontSize: 18 }}>E-Print</Text>
                         <Text style={{ fontSize: 12, color: '#888' }}>Shop Manager</Text>
                     </View>
-                    <NavItems active="Dashboard" />
-                    <NavItems active="Orders" />
-                    <NavItems active="Settings" />
+                    <TouchableOpacity>
+                        <NavItems active="Dashboard" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => router.push("/manager/orders")}>
+                        <NavItems active="Orders" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => router.push("/manager/settings")}>
+                        <NavItems active="Settings" />
+                    </TouchableOpacity>
                 </View>
             )}
 

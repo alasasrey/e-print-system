@@ -88,9 +88,18 @@ export default function ManagerOrdersScreen() {
             {/* MOBILE NAV */}
             {isMobile && (
                 <View style={navStyles.bottomNav}>
-                    <TouchableOpacity onPress={() => router.push("/manager/dashboard")}><Ionicons name="grid-outline" size={24} color="#888" /></TouchableOpacity>
-                    <TouchableOpacity><Ionicons name="list" size={24} color="#0A0A1B" /></TouchableOpacity>
-                    <TouchableOpacity onPress={() => router.push("/manager/settings")}><Ionicons name="settings-outline" size={24} color="#888" /></TouchableOpacity>
+                    <TouchableOpacity style={{ alignItems: 'center' }} onPress={() => router.push("/manager/dashboard")}>
+                        <Ionicons name="grid-outline" size={24} color="#888" />
+                        <Text style={{ fontSize: 10, marginTop: 4 }}>Dashboard</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={{ alignItems: 'center' }}>
+                        <Ionicons name="list" size={24} color="#0A0A1B" />
+                        <Text style={{ fontSize: 10, marginTop: 4 }}>Orders</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={{ alignItems: 'center' }} onPress={() => router.push("/manager/settings")}>
+                        <Ionicons name="settings-outline" size={24} color="#888" />
+                        <Text style={{ fontSize: 10, marginTop: 4 }}>Settings</Text>
+                    </TouchableOpacity>
                 </View>
             )}
         </View>

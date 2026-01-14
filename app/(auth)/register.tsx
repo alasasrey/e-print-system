@@ -4,6 +4,16 @@ import React from "react";
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { styles } from "../../styles/authStyles";
 
+//TODO: FINISH THIS CODE!!!
+async function handleRegister() {
+    try {
+        // const a = await fetch("",);
+    } catch (error) {
+
+    }
+}
+
+
 export default function RegisterScreen() {
     return (
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
