@@ -13,6 +13,9 @@ export default function Layout() {
       <Stack.Screen name="(tabs)/manager/dashboard" options={{ title: "Manager Dashboard" }} />
       <Stack.Screen name="(tabs)/manager/orders" options={{ title: "Manager Orders" }} />
       <Stack.Screen name="(tabs)/manager/settings" options={{ title: "Manager Settings" }} />
+      <Stack.Screen name="(tabs)/admin/dashboard" options={{ title: "Admin Dashboard" }} />
+      <Stack.Screen name="(tabs)/admin/shops" options={{ title: "Admin Shops" }} />
+      <Stack.Screen name="(tabs)/admin/allJobs" options={{ title: "Admin AllJobs" }} />
     </Stack>
   );
 }

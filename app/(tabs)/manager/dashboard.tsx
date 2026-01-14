@@ -13,7 +13,7 @@ import {
 
 export default function ManagerDashboardScreen() {
     const { width } = useWindowDimensions();
-    const isMobile = width < 768; // Standard breakpoint for mobile/tablet
+    const isMobile = width < 768; // Standard breakpoint or screen size for mobile/tablet
 
     return (
         <View style={{ flex: 1, flexDirection: isMobile ? 'column' : 'row', backgroundColor: '#F8F9FA' }}>
@@ -32,6 +32,8 @@ export default function ManagerDashboardScreen() {
                         <Text style={{ fontSize: 12, color: '#888' }}>Shop Manager</Text>
                     </View>
                     <NavItems active="Dashboard" />
+                    <NavItems active="Orders" />
+                    <NavItems active="Settings" />
                 </View>
             )}
 
@@ -88,7 +90,7 @@ export default function ManagerDashboardScreen() {
                 }}>
                     <TouchableOpacity style={{ alignItems: 'center' }}>
                         <Ionicons name="grid" size={24} color="#0A0A1B" />
-                        <Text style={{ fontSize: 10, marginTop: 4 }}>Dash</Text>
+                        <Text style={{ fontSize: 10, marginTop: 4 }}>Dashboard</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={{ alignItems: 'center' }} onPress={() => router.push("/manager/orders")}>
                         <Ionicons name="list-outline" size={24} color="#888" />
