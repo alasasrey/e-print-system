@@ -1,6 +1,6 @@
+import axiosInstance from '@/utils/axiosInstance'; //REMEMBER: USE await axiosInstance.get or .post
 import { Ionicons } from '@expo/vector-icons'; // Ensure expo-vectors is installed
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import { router } from "expo-router";
 import { useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
@@ -14,17 +14,18 @@ export default function LoginScreen() {
     const handleLogin = async () => {
         try {
             //change the localhost in the api.js, app.json or .env
-            const response = await axios.post(`http://192.168.1.4:3000/login`, {
+            const response = await axiosInstance.post(`/login`, {
                 email,
                 password,
             });
 
-            const { token, role } = response.data;
+            const { token, role, user } = response.data;
 
             //SAVE AUTH DATA
             await AsyncStorage.multiSet([
                 ["token", token],
                 ["role", role],
+                ["userId", String(user.id)],
             ]);
 
             //ROLE-BASED ROUTING

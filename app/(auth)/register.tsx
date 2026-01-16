@@ -1,6 +1,6 @@
+import axiosInstance from '@/utils/axiosInstance';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from "axios";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
@@ -22,7 +22,7 @@ export default function RegisterScreen() {
 
         try {
             //change the localhost in the api.js, app.json or .env
-            const response = await axios.post(`http://192.168.1.4:3000/register`, {
+            const response = await axiosInstance.post(`/register`, {
                 fullName,
                 studentId,
                 email,
@@ -30,20 +30,19 @@ export default function RegisterScreen() {
                 role: "student", // default role
             });
 
-            const { token, role } = response.data;
+            const { token, role, user } = response.data;
 
             //Save token and role
             await AsyncStorage.multiSet([
                 ["token", token],
                 ["role", role],
+                ["userId", user.id],
             ]);
 
             //Redirect based on role
             if (role === "admin") router.replace("/(tabs)/admin/dashboard");
             else if (role === "manager") router.replace("/(tabs)/manager/dashboard");
             else router.replace("/(tabs)/student/home");
-
-
 
             Alert.alert("Success", "Registration successful");
 

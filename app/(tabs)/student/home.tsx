@@ -1,15 +1,32 @@
+import { styles } from "@/styles/studentStyles";
+import axiosInstance from "@/utils/axiosInstance";
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { styles } from "../../../styles/studentStyles";
 
 export default function HomeScreen() {
+    const [fullname, setFullname] = useState('');
+
+    //REMEMBER: USE useEffect(()=>{}, []); FOR GET AND POST REQUEST AND TO MAKE SURE IT RUNS ONCE ONLY 
+    useEffect(() => {
+        const getFullname = async () => {
+            const userId = await AsyncStorage.getItem('userId');
+
+            const response = await axiosInstance.get(`/home/${userId}`);
+            setFullname(response.data.fullname);
+
+        }
+
+        getFullname();
+    }, []);
+
     return (
         <View style={{ flex: 1 }}>
             <ScrollView style={styles.homeBg}>
                 <View style={styles.homePadding}>
-                    <Text style={styles.welcomeText}>Welcome, student!</Text>
+                    <Text style={styles.welcomeText}>Welcome, {fullname}!</Text>
                     <Text style={styles.subWelcome}>Find print shops and submit your documents</Text>
 
                     <View style={styles.row}>

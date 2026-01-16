@@ -12,6 +12,7 @@ import bcrypt from 'bcrypt';
 import cors from "cors";
 import express, { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
 import { RowDataPacket } from 'mysql2';
 import database from "./database";
 
@@ -30,6 +31,8 @@ interface IUserRow extends RowDataPacket {
 
 app.use(cors());
 app.use(express.json());
+// Serve the uploads folder statically so files can be accessed
+app.use('/uploads', express.static('uploads'));
 
 // REMEMBER: THIS IS JUST A TEST FOR REQUESTS AND RESPONCES DELETE THIS BLOCK OF CODE IF DONE
 // --- Custom Logging Middleware ---
@@ -52,7 +55,6 @@ const requestResponseLogger = (req: Request, res: Response, next: NextFunction) 
 app.use(requestResponseLogger);
 // ====================================================================
 
-//TODO: FINISH THIS CODE!!!
 // login
 app.post('/login', async (req: Request, res: Response) => {
   const { email, password } = req.body; // Extract credentials from body
@@ -132,7 +134,8 @@ app.post('/register', async (req: Request, res: Response) => {
     res.status(201).json({
       message: 'User registered successfully',
       token,
-      role: role || 'student'
+      role: role || 'student',
+      user: { id: result.id, email: result.email, }
     });
 
   } catch (err: any) {
@@ -141,6 +144,90 @@ app.post('/register', async (req: Request, res: Response) => {
   }
 });
 
+// ==================================================================
+//STUDENT
+
+app.get('/home/:id', async (req: Request, res: Response) => {
+  const userId = req.params.id;
+  try {
+    // Query database for a specific user
+    const [rows]: any = await database.query(
+      'SELECT fullname FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Send the first user found back to React Native
+    res.status(200).json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Configure storage for uploaded files
+const storage = multer.diskStorage({
+  destination: './uploads/',
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
+});
+const upload = multer({ storage });
+
+// POST endpoint for submitting jobs
+app.post('/submit-job', upload.single('file'), async (req: Request, res: Response) => {
+  try {
+    const {
+      userId, printShop, pages, copies,
+      paperSize, colorMode, orientation, binding, notes
+    } = req.body;
+
+    const filePath = req.file ? req.file.path : '';
+
+    const query = `
+      INSERT INTO print_jobs 
+      (user_id, print_shop, file_path, pages, copies, paper_size, color_mode, orientation, binding, notes) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    await database.query(query, [
+      userId, printShop, filePath, pages, copies,
+      paperSize, colorMode, orientation, binding, notes
+    ]);
+
+    res.status(201).json({ message: "Job submitted successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error submitting job" });
+  }
+});
+
+app.get('/profile/:id', async (req: Request, res: Response) => {
+  const userId = req.params.id;
+  try {
+    // Query database for a specific user
+    const [rows]: any = await database.query(
+      'SELECT fullname, email FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Send the first user found back to React Native
+    res.status(200).json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ==================================================================
+
+
 app.listen(port, '0.0.0.0', () => {
-  console.log(`Server running on http://192.168.1.4:${port}`);
+  console.log(`Server running on http://localhost:${port}`);
 });
