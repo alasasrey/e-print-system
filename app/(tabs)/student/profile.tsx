@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // 1. Import AsyncStorage
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 export default function ProfileScreen() {
     const [fullname, setFullname] = useState('');
@@ -53,7 +53,7 @@ export default function ProfileScreen() {
 
     return (
         <View style={{ flex: 1, backgroundColor: '#FAFAFB' }}>
-            <View style={styles.homePadding}>
+            <ScrollView style={styles.homePadding}>
                 {/* Header Section */}
                 <View style={{ marginBottom: 30 }}>
                     <Text style={styles.welcomeText}>Profile</Text>
@@ -71,21 +71,20 @@ export default function ProfileScreen() {
                         <Text style={styles.smallLabel}>Email</Text>
                         <Text style={[styles.detailValue, { fontSize: 16, marginTop: 4 }]}> {email} </Text>
                     </View>
-                </View>
 
-                {/* Logout Button */}
-                <TouchableOpacity
-                    style={[styles.primaryButton, { backgroundColor: '#FF5252', marginTop: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}
-                    onPress={handleLogout} // 3. Link to function
-                >
-                    <Ionicons name="log-out-outline" size={20} color="white" style={{ marginRight: 8 }} />
-                    <Text style={styles.primaryButtonText}>Logout</Text>
-                </TouchableOpacity>
-            </View>
+                    {/* Logout Button */}
+                    <TouchableOpacity
+                        style={[styles.primaryButton, { backgroundColor: '#FF5252', marginTop: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }]}
+                        onPress={handleLogout} // 3. Link to function
+                    >
+                        <Ionicons name="log-out-outline" size={20} color="white" style={{ marginRight: 8 }} />
+                        <Text style={styles.primaryButtonText}>Logout</Text>
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
 
             {/* FIXED BOTTOM NAVIGATION */}
             <View style={styles.bottomNav}>
-                {/* ... navigation items same as before ... */}
                 <TouchableOpacity style={styles.navItem} onPress={() => router.push("/(tabs)/student/home")}>
                     <Ionicons name="home-outline" size={24} color="#888" />
                     <Text style={styles.navText}>Home</Text>

@@ -119,7 +119,7 @@ app.post('/register', async (req: Request, res: Response) => {
 
     // 3. Save to database
     const [result]: any = await database.query(
-      'INSERT INTO users (fullName, studentId, email, password, role) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO users (fullName, student_id, email, password, role) VALUES (?, ?, ?, ?, ?)',
       [fullName, studentId, email, passwordHash, role || 'student']
     );
 
@@ -181,25 +181,64 @@ const upload = multer({ storage });
 app.post('/submit-job', upload.single('file'), async (req: Request, res: Response) => {
   try {
     const {
-      userId, printShop, pages, copies,
-      paperSize, colorMode, orientation, binding, notes
+      userId,
+      printShopId,
+      pages,
+      copies,
+      paperSize,
+      colorMode,
+      orientation,
+      binding,
+      notes
     } = req.body;
 
-    const filePath = req.file ? req.file.path : '';
+    // 1. Handle File Information
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
 
+    const fileName = req.file.originalname;
+    const fileUrl = req.file.path; // Or your S3/Cloudinary URL
+    const fileType = req.file.mimetype;
+
+    // 2. Simple Price Calculation (Example: 0.10 per page)
+    const pricePerPage = colorMode === 'color' ? 0.50 : 0.10;
+    const totalPrice = (parseInt(pages) * parseInt(copies)) * pricePerPage;
+
+    // 3. Match your Database Schema
     const query = `
       INSERT INTO print_jobs 
-      (user_id, print_shop, file_path, pages, copies, paper_size, color_mode, orientation, binding, notes) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      (user_id, print_shop_id, file_name, file_url, file_type, pages, copies, 
+       paper_size, color_mode, orientation, binding, notes, status, payment_status, total_price) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-    await database.query(query, [
-      userId, printShop, filePath, pages, copies,
-      paperSize, colorMode, orientation, binding, notes
-    ]);
+    const values = [
+      userId,
+      printShopId,
+      fileName,
+      fileUrl,
+      fileType,
+      parseInt(pages) || 1,
+      parseInt(copies) || 1,
+      paperSize,
+      colorMode,
+      orientation,
+      binding,
+      notes || "",
+      'pending',      // Default status
+      'unpaid',       // Default payment_status
+      totalPrice
+    ];
 
-    res.status(201).json({ message: "Job submitted successfully!" });
+    const [result]: any = await database.query(query, values);
+
+    res.status(201).json({
+      message: "Job submitted successfully!",
+      jobId: result.insertId
+    });
+
   } catch (error) {
-    console.error(error);
+    console.error("Submission Error:", error);
     res.status(500).json({ message: "Error submitting job" });
   }
 });

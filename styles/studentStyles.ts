@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
     // Home Styles
@@ -19,32 +19,32 @@ export const styles = StyleSheet.create({
     submitDocButton: { backgroundColor: '#0F0F17', borderRadius: 8, padding: 12, alignItems: 'center', marginTop: 15 },
     submitDocText: { color: '#fff', fontWeight: '600' },
 
-    ratingRow: { 
-        flexDirection: 'row', 
-        alignItems: 'center', 
+    ratingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
         marginTop: 5,
-        gap: 5 
+        gap: 5
     },
-    ratingText: { 
-        fontSize: 14, 
-        fontWeight: '600', 
-        color: '#333' 
+    ratingText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#333'
     },
-    statusBadge: { 
+    statusBadge: {
         backgroundColor: '#E8F5E9', // Light green background
-        paddingHorizontal: 8, 
-        paddingVertical: 2, 
+        paddingHorizontal: 8,
+        paddingVertical: 2,
         borderRadius: 4,
         marginLeft: 10
     },
-    statusText: { 
-        fontSize: 12, 
+    statusText: {
+        fontSize: 12,
         color: '#2E7D32', // Dark green text
-        fontWeight: 'bold' 
+        fontWeight: 'bold'
     },
-    shopInfo: { 
-        fontSize: 13, 
-        color: '#777', 
+    shopInfo: {
+        fontSize: 13,
+        color: '#777',
         marginTop: 10,
         lineHeight: 18
     },
@@ -261,5 +261,47 @@ export const styles = StyleSheet.create({
         fontSize: 14,
         color: '#fff',
         fontWeight: 'bold',
+    },
+
+
+    //SELECTION PRINT SHOP
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.1)',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    optionsContainer: {
+        backgroundColor: '#FFF',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#EEE',
+        ...Platform.select({
+            android: { elevation: 5 },
+            web: { boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }
+        })
+    },
+    // On Web, it stays small. On Android, it fills more width.
+    webOptions: { width: 300 },
+    mobileOptions: { width: '80%', maxHeight: '50%' },
+    optionItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        padding: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F5F5F5'
+    },
+    optionText: { fontSize: 14, color: '#333' },
+    selectedText: { fontWeight: 'bold', color: '#0A0A1B' },
+
+
+    //SELECTION 
+    container: { padding: 16 },
+    selectedTextStyle: {
+        fontSize: 14,
+    },
+    placeholderStyle: {
+        fontSize: 14,
+        color: '#888',
     },
 });
