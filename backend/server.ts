@@ -28,6 +28,15 @@ interface IUserRow extends RowDataPacket {
   role: string;
 }
 
+// Configure storage for uploaded files
+const storage = multer.diskStorage({
+  destination: "./uploads/",
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+const upload = multer({ storage });
+
 app.use(cors());
 app.use(express.json());
 // Serve the uploads folder statically so files can be accessed
@@ -174,15 +183,6 @@ app.get("/home/:id", async (req: Request, res: Response) => {
   }
 });
 
-// Configure storage for uploaded files
-const storage = multer.diskStorage({
-  destination: "./uploads/",
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
-const upload = multer({ storage });
-
 // POST endpoint for submitting jobs
 app.post(
   "/submit-job",
@@ -210,8 +210,8 @@ app.post(
       const fileUrl = req.file.path; // Or your S3/Cloudinary URL
       const fileType = req.file.mimetype;
 
-      // 2. Simple Price Calculation (Example: 0.10 per page)
-      const pricePerPage = colorMode === "color" ? 0.5 : 0.1;
+      // 2. Simple Price Calculation (Example: 5 per page)
+      const pricePerPage = colorMode === "color" ? 5 : 2;
       const totalPrice = parseInt(pages) * parseInt(copies) * pricePerPage;
 
       // 3. Match your Database Schema
@@ -294,7 +294,86 @@ app.get("/profile/:id", async (req: Request, res: Response) => {
   }
 });
 
+// GET all active print shops for the Student to choose from
+app.get("/print-shops", async (req, res) => {
+  try {
+    const [rows] = await database.query(
+      "SELECT id, name, location FROM print_shops WHERE is_active = TRUE",
+    );
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching shops" });
+  }
+});
 // ==================================================================
+
+// GET only shops owned by a specific owner (For the Owner App)
+app.get("/my-shops/:ownerId", async (req, res) => {
+  const { ownerId } = req.params;
+  try {
+    const [rows] = await database.query(
+      "SELECT * FROM print_shops WHERE print_shop_owner_id = ?",
+      [ownerId],
+    );
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching your shops" });
+  }
+});
+
+//TODO: PLEASE FIX THIS CODE!!!
+// Add 'upload.none()' as middleware to this specific route
+app.post(
+  "/manager-settings/",
+  upload.none(),
+  async (req: Request, res: Response) => {
+    try {
+      const {
+        print_shop_owner_id,
+        name,
+        address,
+        contactNumber, // from frontend
+        operatingHours, // from frontend
+        is_active,
+      } = req.body;
+
+      // The query columns MUST match your DESCRIBE output exactly
+      const query = `
+      INSERT INTO print_shops 
+      (print_shop_owner_id, name, address, contact_number, operating_hours, is_active) 
+      VALUES (?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE 
+        name = VALUES(name),
+        address = VALUES(address),
+        contact_number = VALUES(contact_number),
+        operating_hours = VALUES(operating_hours),
+        is_active = VALUES(is_active)
+    `;
+
+      const values = [
+        print_shop_owner_id,
+        name,
+        address,
+        contactNumber, // Maps to contact_number
+        operatingHours, // Maps to operating_hours
+        is_active === "true" || is_active === "1" ? 1 : 0,
+      ];
+
+      const [result]: any = await database.query(query, values);
+
+      res.status(200).json({
+        message: "Success",
+        details:
+          result.affectedRows === 2
+            ? "Updated existing shop"
+            : "Created new shop",
+      });
+    } catch (error) {
+      console.error("Settings Error:", error);
+      res.status(500).json({ message: "Database Error" });
+    }
+  },
+);
 
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server running on http://localhost:${port}`);

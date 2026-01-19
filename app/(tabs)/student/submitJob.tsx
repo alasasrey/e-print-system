@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from "expo-document-picker";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Alert,
     FlatList,
@@ -21,21 +21,45 @@ import {
 
 interface Shop {
     id: string;
+    print_shop_owner_id: number;
     name: string;
+    location: string;
+    is_active: boolean;
 }
 
+// REMEMBER: THIS IS JUST A TEST OR PLACEHOLDER FOR DISPLAY ONLY USE THE DATABASE AND DELETE THIS CODE
 const shops: Shop[] = [
-    { id: "1", name: "QuickPrint Express" },
-    { id: "2", name: "Campus Copy Center" },
-    { id: "3", name: "Student Print Hub" },
+    {
+        id: "1",
+        print_shop_owner_id: 5,
+        name: "QuickPrint Express",
+        location: "san miguel",
+        is_active: true,
+    },
+    {
+        id: "2",
+        print_shop_owner_id: 5,
+        name: "Campus Copy Center",
+        location: "san miguel",
+        is_active: true,
+    },
+    {
+        id: "3",
+        print_shop_owner_id: 5,
+        name: "Student Print Hub",
+        location: "san miguel",
+        is_active: true,
+    },
 ];
 
+// REMEMBER: THIS IS JUST A TEST OR PLACEHOLDER FOR DISPLAY ONLY USE THE DATABASE AND DELETE THIS CODE
 const paperData: DropdownItem[] = [
     { label: "A4", value: "A4" },
     { label: "Letter", value: "Letter" },
     { label: "Legal", value: "Legal" },
 ];
 
+// REMEMBER: THIS IS JUST A TEST OR PLACEHOLDER FOR DISPLAY ONLY USE THE DATABASE AND DELETE THIS CODE
 const colorData: DropdownItem[] = [
     { label: "Black & White", value: "bw" },
     { label: "Color", value: "color" },
@@ -43,8 +67,8 @@ const colorData: DropdownItem[] = [
 
 export default function SubmitJobScreen() {
     const [visible, setVisible] = useState(false);
-    const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
-    // const [printShop, setPrintShop] = useState("Main Campus Library");
+    // TODO: FINISH THIS CODE IN THE DISPLAY PRINTSHOP DROPDOWN SELECTION
+    const [selectedPrintShop, setSelectedPrintShop] = useState<Shop | null>(null);
 
     const [file, setFile] = useState<any>(null);
     const [pages, setPages] = useState("1");
@@ -56,13 +80,40 @@ export default function SubmitJobScreen() {
     const [orientation, setOrientation] = useState("portrait");
     const [binding, setBinding] = useState("none");
 
+    // TODO: FINISH THIS CODE IN THE DISPLAY PRINTSHOP DROPDOWN SELECTION
+    const [printShops, setPrintShops] = useState<Shop[]>();
+    const [loading, setLoading] = useState(true);
+
+    // TODO: FINISH THIS CODE IN THE DISPLAY PRINTSHOP DROPDOWN SELECTION
+    useEffect(() => {
+        const getPrintShops = async () => {
+            try {
+                const response = await axiosInstance.get(`/print-shops`);
+
+                // Add a safety check to ensure response.data is an array
+                if (response.data && Array.isArray(response.data)) {
+                    setPrintShops(response.data);
+                } else {
+                    setPrintShops([]);
+                }
+            } catch (error) {
+                console.error("Error fetching shops:", error);
+                setPrintShops([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        getPrintShops();
+    }, []);
+
     const handleSelectPrintShop = (shop: Shop) => {
-        setSelectedShop(shop);
+        setSelectedPrintShop(shop);
         setVisible(false);
     };
 
     const pickDocument = async () => {
-        let result = await DocumentPicker.getDocumentAsync({
+        const result = await DocumentPicker.getDocumentAsync({
             type: ["application/pdf", "image/*", "application/msword"],
         });
 
@@ -72,7 +123,7 @@ export default function SubmitJobScreen() {
     };
 
     const handleSubmit = async () => {
-        if (!file || !selectedShop) {
+        if (!file || !selectedPrintShop) {
             Alert.alert("Error", "Missing file or print shop");
             return;
         }
@@ -99,7 +150,7 @@ export default function SubmitJobScreen() {
 
             // --- APPEND REMAINING DATA ---
             formData.append("userId", userId || "1");
-            formData.append("printShopId", selectedShop.id);
+            formData.append("printShopId", selectedPrintShop.id);
             formData.append("pages", pages);
             formData.append("copies", copies);
             formData.append("notes", notes);
@@ -141,6 +192,8 @@ export default function SubmitJobScreen() {
                         Upload your document and configure print settings
                     </Text>
 
+                    {/* TODO: FINISH THIS CODE IN THE DISPLAY PRINTSHOP DROPDOWN SELECTION */}
+
                     {/* Section 1: Select Print Shop */}
                     <Text style={styles.fieldLabel}>Select Print Shop</Text>
                     <Text style={styles.subLabel}>Choose where you want to print</Text>
@@ -150,8 +203,10 @@ export default function SubmitJobScreen() {
                         style={styles.dropdownInput}
                         onPress={() => setVisible(!visible)}
                     >
-                        <Text style={{ color: selectedShop ? "#000" : "#888" }}>
-                            {selectedShop ? selectedShop.name : "Select a print shop"}
+                        <Text style={{ color: selectedPrintShop ? "#000" : "#888" }}>
+                            {selectedPrintShop
+                                ? selectedPrintShop.name
+                                : "Select a print shop"}
                         </Text>
                         <Ionicons
                             name={visible ? "chevron-up" : "chevron-down"}
@@ -179,9 +234,16 @@ export default function SubmitJobScreen() {
                                         : styles.mobileOptions,
                                 ]}
                             >
+                                {/* TODO: FIX THIS DATA PROPERTY PRINTSHOPS ERROR ASK IN GOOGLE OR AI */}
                                 <FlatList
-                                    data={shops}
+                                    data={printShops}
                                     keyExtractor={(item) => item.id}
+                                    // if the printshop table is empty
+                                    ListEmptyComponent={
+                                        <Text style={{ textAlign: "center", padding: 20 }}>
+                                            No shops found
+                                        </Text>
+                                    }
                                     renderItem={({ item }) => (
                                         <TouchableOpacity
                                             style={styles.optionItem}
@@ -190,12 +252,13 @@ export default function SubmitJobScreen() {
                                             <Text
                                                 style={[
                                                     styles.optionText,
-                                                    selectedShop?.id === item.id && styles.selectedText,
+                                                    selectedPrintShop?.id === item.id &&
+                                                    styles.selectedText,
                                                 ]}
                                             >
                                                 {item.name}
                                             </Text>
-                                            {selectedShop?.id === item.id && (
+                                            {selectedPrintShop?.id === item.id && (
                                                 <Ionicons name="checkmark" size={18} color="#0A0A1B" />
                                             )}
                                         </TouchableOpacity>
