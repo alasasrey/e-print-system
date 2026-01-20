@@ -1,5 +1,3 @@
-// TODO: FIX THE ALERT ERROR IN THE REGISTER  PAGE
-
 import axiosInstance from "@/utils/axiosInstance";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -15,7 +13,6 @@ import {
 } from "react-native";
 import { styles } from "../../styles/authStyles";
 
-// TODO: FIX THE ALERT ERROR IN THE REGISTER  PAGE
 export default function RegisterScreen() {
     const [fullName, setfullName] = useState("");
     const [studentId, setStudentId] = useState("");
@@ -40,11 +37,14 @@ export default function RegisterScreen() {
 
             const { token, role, user } = response.data;
 
+            //make sure the user id is a string if you want to use the post request
+            const userId = user?.id ? String(user.id) : "";
+
             //Save token and role
             await AsyncStorage.multiSet([
                 ["token", token],
                 ["role", role],
-                ["userId", user.id],
+                ["userId", userId],
             ]);
 
             //Redirect based on role
@@ -62,20 +62,16 @@ export default function RegisterScreen() {
         } catch (error) {
             let message = "Registration failed";
 
-            if (error instanceof Error) {
-                // Standard JS error
-                message = error.message;
-            } else if (
-                typeof error === "object" &&
-                error !== null &&
-                "response" in error
-            ) {
+            if (typeof error === "object" && error !== null && "response" in error) {
                 // Potential Axios or similar library error with a 'response' object
                 // You might need to cast 'error' to a specific type if you know it's an Axios error
                 const axiosError = error as {
                     response?: { data?: { message?: string } };
                 };
                 message = axiosError.response?.data?.message || message;
+            } else if (error instanceof Error) {
+                // Standard JS error
+                message = error.message;
             }
 
             Alert.alert("Registration Error", message);

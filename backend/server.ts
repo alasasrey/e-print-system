@@ -298,7 +298,7 @@ app.get("/profile/:id", async (req: Request, res: Response) => {
 app.get("/print-shops", async (req, res) => {
   try {
     const [rows] = await database.query(
-      "SELECT id, name, location FROM print_shops WHERE is_active = TRUE",
+      "SELECT id, name, address FROM print_shops WHERE is_active = TRUE",
     );
     res.json(rows);
   } catch (error) {
@@ -318,6 +318,46 @@ app.get("/my-shops/:ownerId", async (req, res) => {
     res.json(rows);
   } catch (error) {
     res.status(500).json({ message: "Error fetching your shops" });
+  }
+});
+
+//FINISH THIS CODE
+app.get("/manager-dashboard/:ownerId", async (req, res) => {
+  const { ownerId } = req.params;
+  try {
+    const [rows] = await database.query(
+      "SELECT * FROM manager_dashboard WHERE print_shop_owner_id = ?",
+      [ownerId],
+    );
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching your shops" });
+  }
+});
+
+//FINISH THIS CODE
+app.post("/manager-dashboard/:ownerId", async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    // 3. Match your Database Schema
+    const query = `
+      INSERT INTO print_jobs 
+      (user_id, print_shop_id, file_name, file_url, file_type, pages, copies, 
+       paper_size, color_mode, orientation, binding, notes, status, payment_status, total_price) 
+      VALUES (?)`;
+
+    const values = [userId];
+
+    const [result]: any = await database.query(query, values);
+
+    res.status(201).json({
+      message: "Job submitted successfully!",
+      jobId: result.insertId,
+    });
+  } catch (error) {
+    console.error("Submission Error:", error);
+    res.status(500).json({ message: "Error submitting job" });
   }
 });
 
@@ -356,7 +396,7 @@ app.post(
         address,
         contactNumber, // Maps to contact_number
         operatingHours, // Maps to operating_hours
-        is_active === "true" || is_active === "1" ? 1 : 0,
+        is_active == "true" || is_active == "1" ? 1 : 0,
       ];
 
       const [result]: any = await database.query(query, values);

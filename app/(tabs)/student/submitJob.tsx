@@ -65,6 +65,8 @@ const colorData: DropdownItem[] = [
     { label: "Color", value: "color" },
 ];
 
+//PLEASE FINISH THIS CODE!!!
+
 export default function SubmitJobScreen() {
     const [visible, setVisible] = useState(false);
     // TODO: FINISH THIS CODE IN THE DISPLAY PRINTSHOP DROPDOWN SELECTION

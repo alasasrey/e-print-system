@@ -262,11 +262,11 @@ export default function ManagerSettingsScreen() {
             const formData = new FormData();
 
             formData.append("print_shop_owner_id", userId || "1");
-            formData.append("name", shopData.name);
-            formData.append("address", shopData.address);
-            formData.append("contactNumber", shopData.contactNumber);
-            formData.append("operatingHours", shopData.operatingHours);
-            formData.append("is_active", String(shopData.isActive));
+            formData.append("name", shopData?.name);
+            formData.append("address", shopData?.address);
+            formData.append("contactNumber", shopData?.contactNumber);
+            formData.append("operatingHours", shopData?.operatingHours);
+            formData.append("is_active", String(shopData?.isActive));
 
             const response = await axiosInstance.post(`/manager-settings`, formData, {
                 headers: {

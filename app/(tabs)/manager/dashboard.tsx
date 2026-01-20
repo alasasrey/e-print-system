@@ -2,8 +2,10 @@
 
 import { ManagerLayout } from "@/components/ManagerLayout";
 import { StatCard } from "@/components/statCard";
+import axiosInstance from "@/utils/axiosInstance";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from "react";
 import {
     Platform,
     ScrollView,
@@ -15,10 +17,34 @@ import {
 } from "react-native";
 
 //TODO: PLEASE FIX THIS CODE!!!
+//PLEASE FINISH THIS CODE!!!
 
 export default function ManagerDashboardScreen() {
     const { width } = useWindowDimensions();
     const isMobile = width < 768; // Standard breakpoint or screen size for mobile/tablet
+    const [pending, setPending] = useState(0);
+    const [processing, setProcessing] = useState(0);
+    const [ready, setReady] = useState(0);
+    const [approved, setApproved] = useState(0);
+    const [dailyRevenue, setDailyRevenue] = useState(0);
+    const [totalRevenue, setTotalRevenue] = useState(0);
+
+    useEffect(() => {
+        const getUserData = async () => {
+            try {
+                const userId = await AsyncStorage.getItem("userId");
+                if (userId) {
+                    const response = await axiosInstance.get(
+                        `/manager-dashboard/${userId}`,
+                    );
+                    //   fullname(response.data.fullname);
+                }
+            } catch (err) {
+                console.error("Error fetching profile:", err);
+            }
+        };
+        getUserData();
+    }, []);
 
     return (
         <ManagerLayout
