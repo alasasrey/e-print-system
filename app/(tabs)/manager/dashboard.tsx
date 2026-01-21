@@ -5,6 +5,7 @@ import { StatCard } from "@/components/statCard";
 import axiosInstance from "@/utils/axiosInstance";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
     Platform,
@@ -22,6 +23,8 @@ import {
 export default function ManagerDashboardScreen() {
     const { width } = useWindowDimensions();
     const isMobile = width < 768; // Standard breakpoint or screen size for mobile/tablet
+    const [noShop, setNoShop] = useState(false);
+
     const [pending, setPending] = useState(0);
     const [processing, setProcessing] = useState(0);
     const [ready, setReady] = useState(0);
@@ -37,94 +40,134 @@ export default function ManagerDashboardScreen() {
                     const response = await axiosInstance.get(
                         `/manager-dashboard/${userId}`,
                     );
-                    //   fullname(response.data.fullname);
+
+                    if (response.data.noShop) {
+                        setNoShop(true);
+                    }
+
+                    setPending(response.data?.pending);
+                    setProcessing(response.data?.processing);
+                    setReady(response.data?.ready);
+                    setApproved(response.data?.approved);
+                    setDailyRevenue(response.data?.dailyRevenue);
+                    setTotalRevenue(response.data?.totalRevenue);
+
+                    console.log(`pending: ${response.data.pending}`);
+                    console.log(`processing: ${response.data.processing}`);
+                    console.log(`ready: ${response.data.ready}`);
+                    console.log(`approved: ${response.data.approved}`);
+                    console.log(`dailyRevenue: ${response.data.dailyRevenue}`);
+                    console.log(`totalRevenue: ${response.data.totalRevenue}`);
                 }
             } catch (err) {
-                console.error("Error fetching profile:", err);
+                console.error("Error fetching manager dashboard data:", err);
             }
         };
         getUserData();
     }, []);
 
     return (
-        <ManagerLayout
-            currentRoute="dashboard"
-            title="Dashboard Overview"
-            subtitle="Monitor your print shop performance"
-        >
-            <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
-                <Text
-                    style={{
-                        fontSize: isMobile ? 20 : 24,
-                        fontWeight: "bold",
-                        marginBottom: 5,
-                    }}
+        <>
+            {noShop ? (
+                <ManagerLayout
+                    currentRoute="dashboard"
+                    title="Dashboard Overview"
+                    subtitle="Monitor your print shop performance"
                 >
-                    Dashboard Overview
-                </Text>
-                <Text style={{ color: "#888", marginBottom: 25 }}>
-                    Monitor your print shop performance
-                </Text>
+                    <Ionicons name="storefront-outline" size={50} color="#0A0A1B" />
+                    <Text style={styles.setupTitle}>Welcome to e-Print!</Text>{" "}
+                    <Text style={styles.setupSub}>
+                        You haven't set up your shop profile yet.
+                    </Text>
+                    <TouchableOpacity
+                        style={styles.primaryButton}
+                        onPress={() => router.push("/(tabs)/manager/settings")}
+                    >
+                        <Text style={{ color: "#fff" }}>Configure Shop Now</Text>
+                    </TouchableOpacity>
+                </ManagerLayout>
+            ) : (
+                // Show your normal StatCards here
+                <ManagerLayout
+                    currentRoute="dashboard"
+                    title="Dashboard Overview"
+                    subtitle="Monitor your print shop performance"
+                >
+                    <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
+                        <Text
+                            style={{
+                                fontSize: isMobile ? 20 : 24,
+                                fontWeight: "bold",
+                                marginBottom: 5,
+                            }}
+                        >
+                            Dashboard Overview
+                        </Text>
+                        <Text style={{ color: "#888", marginBottom: 25 }}>
+                            Monitor your print shop performance
+                        </Text>
 
-                {/* STAT CARDS GRID - Responsive Columns */}
-                <View
-                    style={{
-                        flexDirection: "row",
-                        flexWrap: "wrap",
-                        justifyContent: "space-between",
-                    }}
-                >
-                    <StatCard
-                        label="Pending Approval"
-                        value="1"
-                        subtext="Requires action"
-                        icon="time-outline"
-                        color="#FFB020"
-                        isMobile={isMobile}
-                    />
-                    <StatCard
-                        label="Active Jobs"
-                        value="2"
-                        subtext="In progress"
-                        icon="print-outline"
-                        color="#10B981"
-                        isMobile={isMobile}
-                    />
-                    <StatCard
-                        label="Ready for Pickup"
-                        value="0"
-                        subtext="Waiting"
-                        icon="checkmark-circle-outline"
-                        color="#3B82F6"
-                        isMobile={isMobile}
-                    />
-                    <StatCard
-                        label="Completed Today"
-                        value="0"
-                        subtext="Finished"
-                        icon="checkmark-done-outline"
-                        color="#10B981"
-                        isMobile={isMobile}
-                    />
-                    <StatCard
-                        label="Today's Revenue"
-                        value="₱0.00"
-                        subtext="Daily earnings"
-                        icon="cash-outline"
-                        color="#666"
-                        isMobile={isMobile}
-                    />
-                    <StatCard
-                        label="Total Revenue"
-                        value="₱0.00"
-                        subtext="All-time"
-                        icon="trending-up-outline"
-                        color="#666"
-                        isMobile={isMobile}
-                    />
-                </View>
-            </ScrollView>
-        </ManagerLayout>
+                        {/* STAT CARDS GRID - Responsive Columns */}
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                flexWrap: "wrap",
+                                justifyContent: "space-between",
+                            }}
+                        >
+                            <StatCard
+                                label="Pending Approval"
+                                value={pending || "0"}
+                                subtext="Requires action"
+                                icon="time-outline"
+                                color="#FFB020"
+                                isMobile={isMobile}
+                            />
+                            <StatCard
+                                label="Active Jobs"
+                                value={processing || "0"}
+                                subtext="In progress"
+                                icon="print-outline"
+                                color="#10B981"
+                                isMobile={isMobile}
+                            />
+                            <StatCard
+                                label="Ready for Pickup"
+                                value={ready || "0"}
+                                subtext="Waiting"
+                                icon="checkmark-circle-outline"
+                                color="#3B82F6"
+                                isMobile={isMobile}
+                            />
+                            <StatCard
+                                label="Completed Today"
+                                value={approved || "0"}
+                                subtext="Finished"
+                                icon="checkmark-done-outline"
+                                color="#10B981"
+                                isMobile={isMobile}
+                            />
+                            <StatCard
+                                label="Today's Revenue"
+                                value={dailyRevenue || "₱0.00"}
+                                subtext="Daily earnings"
+                                icon="cash-outline"
+                                color="#666"
+                                isMobile={isMobile}
+                            />
+                            <StatCard
+                                label="Total Revenue"
+                                value={totalRevenue || "₱0.00"}
+                                subtext="All-time"
+                                icon="trending-up-outline"
+                                color="#666"
+                                isMobile={isMobile}
+                            />
+                        </View>
+                    </ScrollView>
+                </ManagerLayout>
+            )}
+        </>
     );
 }
 
@@ -183,6 +226,30 @@ const SidebarItem = ({ icon, label, onPress, active }: any) => (
 );
 
 const styles = StyleSheet.create({
+    setupTitle: {
+        fontSize: 22,
+        fontWeight: "bold",
+        color: "#0A0A1B",
+        marginTop: 20,
+        textAlign: "center",
+    },
+    setupSub: {
+        fontSize: 16,
+        color: "#666",
+        textAlign: "center",
+        marginBottom: 30,
+        paddingHorizontal: 20,
+    },
+    primaryButton: {
+        backgroundColor: "#0A0A1B",
+        height: 50,
+        borderRadius: 10,
+        justifyContent: "center",
+        alignItems: "center",
+        paddingHorizontal: 20,
+        width: "100%",
+    },
+
     card: {
         backgroundColor: "#FFF",
         borderRadius: 16,

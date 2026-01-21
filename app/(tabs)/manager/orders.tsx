@@ -1,8 +1,9 @@
 //TODO: PLEASE FIX THIS CODE!!!
 
 import { ManagerLayout } from "@/components/ManagerLayout";
+import axiosInstance from "@/utils/axiosInstance";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
     Platform,
     ScrollView,
@@ -19,6 +20,53 @@ import {
 export default function ManagerOrdersScreen() {
     const { width } = useWindowDimensions();
     const isMobile = width < 768;
+
+    const [userId, setUserId] = useState();
+    const [fileName, setFileName] = useState();
+    const [fileUrl, setFileUrl] = useState();
+    const [fileType, setFileType] = useState();
+    const [pages, setPages] = useState();
+    const [copies, setCopies] = useState();
+    const [paperSize, setPaperSize] = useState();
+    const [colorMode, setColorMode] = useState();
+    const [orientation, setOrientation] = useState();
+    const [binding, setBinding] = useState();
+    const [notes, setNotes] = useState();
+    const [status, setStatus] = useState();
+    const [paymentStatus, setPaymentStatus] = useState();
+    const [totalPrice, setTotalPrice] = useState();
+
+    useEffect(() => {
+        const getUserData = async () => {
+            try {
+                const response = await axiosInstance.get(`/manager-orders`);
+
+                // user_id 	 	file_name 	file_url 	file_type 	pages 	copies
+                // paper_size 	color_mode 	orientation 	binding 	notes 	status 	payment_status
+                // total_price
+
+                setUserId(response?.data?.user_id);
+                setFileName(response?.data?.file_name);
+                setFileUrl(response?.data?.file_url);
+                setFileType(response?.data?.file_type);
+                setPages(response?.data?.pages);
+                setCopies(response?.data?.copies);
+                setPaperSize(response?.data?.paper_size);
+                setColorMode(response?.data?.color_mode);
+                setOrientation(response?.data?.orientation);
+                setBinding(response?.data?.binding);
+                setNotes(response?.data?.notes);
+                setStatus(response?.data?.status);
+                setPaymentStatus(response?.data?.payment_status);
+                setTotalPrice(response?.data?.total_price);
+
+                // console.log(`approved: ${response.data.user_id}`);
+            } catch (err) {
+                console.error("Error fetching manager order data:", err);
+            }
+        };
+        getUserData();
+    }, []);
 
     return (
         <ManagerLayout

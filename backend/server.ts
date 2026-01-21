@@ -139,6 +139,13 @@ app.post("/register", async (req: Request, res: Response) => {
       [fullName, studentId, email, passwordHash, role || "student"],
     );
 
+    if (role === "manager") {
+      await database.query(
+        "INSERT INTO print_shops (print_shop_owner_id, name, is_active) VALUES (?, ?, ?)",
+        [result.id, "My New Print Shop", false], // Set as inactive by default or 0
+      );
+    }
+
     // Generate token so the user can be logged in immediately
     const token = jwt.sign(
       { userId: result.insertId, email: email },
@@ -307,6 +314,7 @@ app.get("/print-shops", async (req, res) => {
 });
 // ==================================================================
 
+// MANAGERS
 // GET only shops owned by a specific owner (For the Owner App)
 app.get("/my-shops/:ownerId", async (req, res) => {
   const { ownerId } = req.params;
@@ -315,6 +323,7 @@ app.get("/my-shops/:ownerId", async (req, res) => {
       "SELECT * FROM print_shops WHERE print_shop_owner_id = ?",
       [ownerId],
     );
+
     res.json(rows);
   } catch (error) {
     res.status(500).json({ message: "Error fetching your shops" });
@@ -322,21 +331,59 @@ app.get("/my-shops/:ownerId", async (req, res) => {
 });
 
 //FINISH THIS CODE
-app.get("/manager-dashboard/:ownerId", async (req, res) => {
-  const { ownerId } = req.params;
+// backend/server.ts
+
+app.get("/manager-dashboard/:userId", async (req, res) => {
+  const { userId } = req.params;
   try {
-    const [rows] = await database.query(
-      "SELECT * FROM manager_dashboard WHERE print_shop_owner_id = ?",
-      [ownerId],
+    // 1. Check if manager has a shop
+    const [shop]: any = await database.query(
+      "SELECT id FROM print_shops WHERE print_shop_owner_id  = ?",
+      [userId],
     );
-    res.json(rows);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching your shops" });
+
+    if (!shop || shop.length === 0) {
+      return res.json({ noShop: true });
+    }
+
+    const shopId = shop[0].id;
+
+    // 2. Updated Query with NULL checks
+    // IMPORTANT: Verify that 'total_price' and 'created_at' exist in your DB!
+    const [stats]: any = await database.query(
+      `SELECT 
+          COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending,
+          COUNT(CASE WHEN status = 'processing' THEN 1 END) as processing,
+          COUNT(CASE WHEN status = 'ready' THEN 1 END) as ready,
+          COUNT(CASE WHEN status = 'completed' THEN 1 END) as approved,
+          SUM(CASE WHEN DATE(created_at) = CURDATE() THEN total_price ELSE 0 END) as dailyRevenue,
+          SUM(total_price) as totalRevenue
+       FROM print_jobs 
+       WHERE print_shop_id = ?`,
+      [shopId],
+    );
+
+    // Safeguard against null values from SUM()
+    const daily = stats[0].dailyRevenue || 0;
+    const total = stats[0].totalRevenue || 0;
+
+    res.json({
+      noShop: false,
+      pending: stats[0].pending || 0,
+      processing: stats[0].processing || 0,
+      ready: stats[0].ready || 0,
+      approved: stats[0].approved || 0,
+      dailyRevenue: `₱${parseFloat(daily).toFixed(2)}`,
+      totalRevenue: `₱${parseFloat(total).toFixed(2)}`,
+    });
+  } catch (err) {
+    console.error("DASHBOARD ERROR:", err); // This prints the EXACT SQL error in your terminal
+    res.status(500).json({ error: "Database error", details: err });
   }
 });
 
 //FINISH THIS CODE
-app.post("/manager-dashboard/:ownerId", async (req, res) => {
+app.post("/manager-dashboard/:userId", async (req, res) => {
   try {
     const { userId } = req.body;
 
@@ -358,6 +405,19 @@ app.post("/manager-dashboard/:ownerId", async (req, res) => {
   } catch (error) {
     console.error("Submission Error:", error);
     res.status(500).json({ message: "Error submitting job" });
+  }
+});
+
+app.get("/manager-orders", async (req, res) => {
+  try {
+    const [orders]: any = await database.query(`SELECT *  FROM print_jobs`);
+
+    res.json({
+      orders,
+    });
+  } catch (err) {
+    console.error("DASHBOARD ERROR:", err); // This prints the EXACT SQL error in your terminal
+    res.status(500).json({ error: "Database error", details: err });
   }
 });
 
