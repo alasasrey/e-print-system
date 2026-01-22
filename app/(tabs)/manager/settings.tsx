@@ -287,6 +287,35 @@ export default function ManagerSettingsScreen() {
         }
     };
 
+    const handleDeleteShop = async () => {
+        Alert.alert(
+            "Confirm Deletion",
+            "This action is permanent. All your shop data will be lost. Are you sure?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete My Shop",
+                    style: "destructive",
+                    onPress: async () => {
+                        setLoading(true);
+                        try {
+                            const userId = await AsyncStorage.getItem("userId");
+                            await axiosInstance.delete(`/manager/delete-shop/${userId}`);
+
+                            Alert.alert("Deleted", "Your shop account has been removed.");
+                            // Redirect user to home or setup page
+                            // navigation.replace('Welcome');
+                        } catch (error) {
+                            Alert.alert("Error", "Could not delete shop. Try again later.");
+                        } finally {
+                            setLoading(false);
+                        }
+                    },
+                },
+            ],
+        );
+    };
+
     return (
         <ManagerLayout
             currentRoute="settings"
@@ -403,7 +432,7 @@ export default function ManagerSettingsScreen() {
                             </Text>
                             <TouchableOpacity
                                 style={styles.dangerButton}
-                                onPress={() => Alert.alert("Confirm Delete", "Are you sure?")}
+                                onPress={handleDeleteShop}
                             >
                                 <Text style={styles.dangerButtonText}>Delete Shop Account</Text>
                             </TouchableOpacity>

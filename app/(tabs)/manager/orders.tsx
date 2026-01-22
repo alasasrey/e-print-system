@@ -3,8 +3,10 @@
 import { ManagerLayout } from "@/components/ManagerLayout";
 import axiosInstance from "@/utils/axiosInstance";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import {
+    Alert,
     Platform,
     ScrollView,
     StyleSheet,
@@ -14,121 +16,184 @@ import {
     useWindowDimensions,
 } from "react-native";
 
-//TODO: PLEASE FIX THIS CODE!!!
-//PLEASE FINISH THIS CODE!!!
+// //TODO: PLEASE FIX THIS CODE!!!
+// //PLEASE FINISH THIS CODE!!!
+
+interface Order {
+    user_id: number;
+    print_shop_id: number;
+    file_name?: string;
+    file_url?: string;
+    file_type?: string;
+    copies: number;
+    pages: number;
+    paper_size: string;
+    color_mode: string;
+    binding: string;
+    notes?: string;
+    status: string;
+    payment_status: string | number;
+    total_price: string | number;
+}
+
+const ORDER_STATUS_CONFIG: any = {
+    pending: { label: "Pending", color: "#FFB020", icon: "alert-circle-outline" },
+    processing: { label: "Processing", color: "#3B82F6", icon: "print-outline" },
+    ready: { label: "Ready", color: "#10B981", icon: "cube-outline" },
+    completed: {
+        label: "Completed",
+        color: "#059669",
+        icon: "checkmark-done-circle-outline",
+    },
+    declined: {
+        label: "Declined",
+        color: "#FF5252",
+        icon: "close-circle-outline",
+    },
+};
 
 export default function ManagerOrdersScreen() {
     const { width } = useWindowDimensions();
     const isMobile = width < 768;
+    const [orders, setOrders] = useState<Order[]>([]);
 
-    const [userId, setUserId] = useState();
-    const [fileName, setFileName] = useState();
-    const [fileUrl, setFileUrl] = useState();
-    const [fileType, setFileType] = useState();
-    const [pages, setPages] = useState();
-    const [copies, setCopies] = useState();
-    const [paperSize, setPaperSize] = useState();
-    const [colorMode, setColorMode] = useState();
-    const [orientation, setOrientation] = useState();
-    const [binding, setBinding] = useState();
-    const [notes, setNotes] = useState();
-    const [status, setStatus] = useState();
-    const [paymentStatus, setPaymentStatus] = useState();
-    const [totalPrice, setTotalPrice] = useState();
+    const fetchOrders = async () => {
+        try {
+            const userId = await AsyncStorage.getItem("userId"); // Ensure you import AsyncStorage
+            if (!userId) return;
+
+            const response = await axiosInstance.get(`/manager-orders/${userId}`);
+            setOrders(Array.isArray(response.data) ? response.data : []);
+        } catch (err) {
+            console.error("Error fetching orders:", err);
+        }
+    };
 
     useEffect(() => {
-        const getUserData = async () => {
-            try {
-                const response = await axiosInstance.get(`/manager-orders`);
-
-                // user_id 	 	file_name 	file_url 	file_type 	pages 	copies
-                // paper_size 	color_mode 	orientation 	binding 	notes 	status 	payment_status
-                // total_price
-
-                setUserId(response?.data?.user_id);
-                setFileName(response?.data?.file_name);
-                setFileUrl(response?.data?.file_url);
-                setFileType(response?.data?.file_type);
-                setPages(response?.data?.pages);
-                setCopies(response?.data?.copies);
-                setPaperSize(response?.data?.paper_size);
-                setColorMode(response?.data?.color_mode);
-                setOrientation(response?.data?.orientation);
-                setBinding(response?.data?.binding);
-                setNotes(response?.data?.notes);
-                setStatus(response?.data?.status);
-                setPaymentStatus(response?.data?.payment_status);
-                setTotalPrice(response?.data?.total_price);
-
-                // console.log(`approved: ${response.data.user_id}`);
-            } catch (err) {
-                console.error("Error fetching manager order data:", err);
-            }
-        };
-        getUserData();
+        fetchOrders();
     }, []);
 
+    // Helper to determine color based on status
+    const getStatusColor = (status: string) => {
+        switch (status.toLowerCase()) {
+            case "pending":
+                return "#FFB020";
+            case "processing":
+                return "#3B82F6";
+            case "ready":
+                return "#10B981";
+            case "completed":
+                return "#059669";
+            default:
+                return "#666";
+        }
+    };
+
+    // --- NEW FUNCTION TO HANDLE API CALL ---
+    const handleUpdateStatus = async (orderId: number, newStatus: string) => {
+        try {
+            // Adjust the endpoint based on your backend API
+            await axiosInstance.put(`/update-order-status/${orderId}`, {
+                status: newStatus,
+            });
+
+            // Refresh the list to show updated status
+            fetchOrders();
+        } catch (err) {
+            console.error("Error updating status:", err);
+            alert("Failed to update order status.");
+        }
+    };
+
+    const handleDecline = (orderId: number) => {
+        Alert.alert(
+            "Decline Order",
+            "Are you sure you want to decline this job? This will notify the customer.",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Decline",
+                    style: "destructive",
+                    onPress: () => handleUpdateStatus(orderId, "declined"),
+                },
+            ],
+        );
+    };
+
     return (
-        <ManagerLayout
-            currentRoute="orders"
-            title="Order Dashboard"
-            subtitle="Review and track all print submissions"
-        >
+        // <ManagerLayout currentRoute="orders" title="Order Dashboard">
+        //     <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
+        //         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 20 }}>
+        //             {/* if the orders is greater than 0 then display it, else no orders */}
+        //             {orders.length > 0 ? (
+        //                 orders.map((order: any) => (
+        //                     <OrderCard
+        //                         key={order.id}
+        //                         status={order.status}
+        //                         statusColor={getStatusColor(order.status)}
+        //                         title={order.file_name || "Untitled Job"}
+        //                         price={`₱${parseFloat(order.total_price).toFixed(2)}`}
+        //                         orderId={`ORD-${order.id}`}
+        //                         details={{
+        //                             pages: `${order.copies} x ${order.pages}`,
+        //                             size: order.paper_size,
+        //                             mode: order.color_mode,
+        //                             binding: order.binding,
+        //                         }}
+        //                         isMobile={isMobile}
+        //                     />
+        //                 ))
+        //             ) : (
+        //                 <Text
+        //                     style={{
+        //                         textAlign: "center",
+        //                         width: "100%",
+        //                         marginTop: 50,
+        //                         color: "#888",
+        //                     }}
+        //                 >
+        //                     No orders found.
+        //                 </Text>
+        //             )}
+        //         </View>
+        //     </ScrollView>
+        // </ManagerLayout>
+
+        <ManagerLayout currentRoute="orders" title="Order Dashboard">
             <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
-                <View
-                    style={{
-                        flexDirection: isMobile ? "column" : "row",
-                        flexWrap: "wrap",
-                        gap: 20,
-                    }}
-                >
-                    {/* CASE 1: PENDING (New Request) */}
-                    <OrderCard
-                        status="Pending"
-                        statusColor="#FFB020"
-                        title="Thesis_v2_Final.pdf"
-                        price="₱450.00"
-                        orderId="ORD-2024-088"
-                        details={{
-                            pages: "1 x 150",
-                            size: "Short",
-                            mode: "Colored",
-                            binding: "Hardbound",
-                        }}
-                        isMobile={isMobile}
-                    />
-
-                    {/* CASE 2: PROCESSING */}
-                    <OrderCard
-                        status="Processing"
-                        statusColor="#3B82F6"
-                        title="Project Presentation.pptx"
-                        price="₱125.00"
-                        orderId="ORD-2024-002"
-                        details={{
-                            pages: "3 x 15",
-                            size: "A4",
-                            mode: "B&W",
-                            binding: "Staple",
-                        }}
-                        isMobile={isMobile}
-                    />
-
-                    {/* CASE 3: READY */}
-                    <OrderCard
-                        status="Ready"
-                        statusColor="#10B981"
-                        title="Research Paper - Final Draft.pdf"
-                        price="₱185.50"
-                        orderId="ORD-2024-001"
-                        details={{
-                            pages: "3 x 15",
-                            size: "A4",
-                            mode: "B&W",
-                            binding: "Staple",
-                        }}
-                        isMobile={isMobile}
-                    />
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 20 }}>
+                    {orders.length > 0 ? (
+                        orders.map((order: any) => (
+                            <OrderCard
+                                key={order.id}
+                                id={order.id} // Pass the raw ID
+                                status={order.status}
+                                statusColor={getStatusColor(order.status)}
+                                title={order.file_name || "Untitled Job"}
+                                price={`₱${parseFloat(order.total_price).toFixed(2)}`}
+                                orderId={`ORD-${order.id}`}
+                                details={{
+                                    pages: `${order.copies} x ${order.pages}`,
+                                    size: order.paper_size,
+                                    mode: order.color_mode,
+                                    binding: order.binding,
+                                }}
+                                isMobile={isMobile}
+                                onUpdateStatus={handleUpdateStatus} // Pass the function here
+                            />
+                        ))
+                    ) : (
+                        <Text
+                            style={{
+                                textAlign: "center",
+                                width: "100%",
+                                marginTop: 50,
+                                color: "#888",
+                            }}
+                        >
+                            No orders found.
+                        </Text>
+                    )}
                 </View>
             </ScrollView>
         </ManagerLayout>
@@ -151,7 +216,88 @@ const SidebarItem = ({ icon, label, onPress, active }: any) => (
     </TouchableOpacity>
 );
 
+// const OrderCard = ({
+//     id, // Make sure to receive the raw numeric ID
+//     status,
+//     statusColor,
+//     title,
+//     price,
+//     orderId,
+//     details,
+//     isMobile,
+//     onUpdateStatus, // Add this prop
+// }: any) => {
+//     const currentStatus = status?.toLowerCase();
+//     const isPending = currentStatus === "pending";
+//     const isProcessing = currentStatus === "processing";
+//     const isReady = currentStatus === "ready";
+
+//     return (
+//         <View style={[styles.card, { width: isMobile ? "100%" : "48%" }]}>
+//             {/* ... rest of your header code ... */}
+
+//             <Text style={styles.title}>{title}</Text>
+
+//             <View style={styles.detailsGrid}>
+//                 <DetailItem label="Copies x Pages" value={details.pages} />
+//                 <DetailItem label="Paper Size" value={details.size} />
+//                 <DetailItem label="Color Mode" value={details.mode} />
+//                 <DetailItem label="Binding" value={details.binding} />
+//             </View>
+
+//             {/* ACTION AREA */}
+//             {isPending ? (
+//                 <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}>
+//                     <TouchableOpacity
+//                         style={[styles.actionButton, styles.declineButton]}
+//                         onPress={() => onUpdateStatus(id, "declined")} // CALL DECLINE
+//                     >
+//                         <Text style={styles.declineText}>Decline</Text>
+//                     </TouchableOpacity>
+
+//                     <TouchableOpacity
+//                         style={[styles.actionButton, styles.acceptButton]}
+//                         onPress={() => onUpdateStatus(id, "processing")} // CALL ACCEPT
+//                     >
+//                         <Text style={styles.acceptText}>Accept Job</Text>
+//                     </TouchableOpacity>
+//                 </View>
+//             ) : (
+//                 <TouchableOpacity
+//                     onPress={() => {
+//                         // Logic to move from Processing -> Ready -> Completed
+//                         if (isProcessing) onUpdateStatus(id, "ready");
+//                         else if (isReady) onUpdateStatus(id, "completed");
+//                     }}
+//                     style={[
+//                         styles.statusBox,
+//                         {
+//                             backgroundColor: isReady ? "#E8F9F1" : "#EBF5FF",
+//                             borderColor: isReady ? "#C6F6D5" : "#BEE3F8",
+//                         },
+//                     ]}
+//                 >
+//                     <Text
+//                         style={[
+//                             styles.statusTitle,
+//                             { color: isReady ? "#22543D" : "#2B6CB0" },
+//                         ]}
+//                     >
+//                         {isReady ? "✓ Ready for Pickup" : "Printing in Progress..."}
+//                     </Text>
+//                     <Text style={styles.statusSub}>
+//                         {isReady
+//                             ? "Click to mark as Completed."
+//                             : "Click to mark as Ready."}
+//                     </Text>
+//                 </TouchableOpacity>
+//             )}
+//         </View>
+//     );
+// };
+
 const OrderCard = ({
+    id, // Make sure to receive the raw numeric ID
     status,
     statusColor,
     title,
@@ -159,10 +305,12 @@ const OrderCard = ({
     orderId,
     details,
     isMobile,
+    onUpdateStatus, // Add this prop
 }: any) => {
-    const isPending = status === "Pending";
-    const isProcessing = status === "Processing";
-    const isReady = status === "Ready";
+    const currentStatus = status?.toLowerCase();
+    const isPending = currentStatus === "pending";
+    const isProcessing = currentStatus === "processing";
+    const isReady = currentStatus === "ready";
 
     return (
         <View style={[styles.card, { width: isMobile ? "100%" : "48%" }]}>
@@ -206,14 +354,53 @@ const OrderCard = ({
             {isPending ? (
                 <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}>
                     <TouchableOpacity style={[styles.actionButton, styles.declineButton]}>
-                        <Text style={styles.declineText}>Decline</Text>
+                        <Text
+                            style={styles.declineText}
+                            onPress={() => onUpdateStatus(id, "declined")} // CALL DECLINE
+                        >
+                            Decline
+                        </Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={[styles.actionButton, styles.acceptButton]}>
-                        <Text style={styles.acceptText}>Accept Job</Text>
+                        <Text
+                            style={styles.acceptText}
+                            onPress={() => onUpdateStatus(id, "processing")} // CALL ACCEPT
+                        >
+                            Accept Job
+                        </Text>
                     </TouchableOpacity>
                 </View>
             ) : (
-                <View
+                // <View
+                //     style={[
+                //         styles.statusBox,
+                //         {
+                //             backgroundColor: isReady ? "#E8F9F1" : "#EBF5FF",
+                //             borderColor: isReady ? "#C6F6D5" : "#BEE3F8",
+                //         },
+                //     ]}
+                // >
+                //     <Text
+                //         style={[
+                //             styles.statusTitle,
+                //             { color: isReady ? "#22543D" : "#2B6CB0" },
+                //         ]}
+                //     >
+                //         {isReady ? "✓ Ready for Pickup" : "Printing in Progress..."}
+                //     </Text>
+                //     <Text style={styles.statusSub}>
+                //         {isReady
+                //             ? "Customer has been notified."
+                //             : "Est. completion: Jan 10, 2:00 PM"}
+                //     </Text>
+                // </View>
+
+                <TouchableOpacity
+                    onPress={() => {
+                        // Logic to move from Processing -> Ready -> Completed
+                        if (isProcessing) onUpdateStatus(id, "ready");
+                        else if (isReady) onUpdateStatus(id, "completed");
+                    }}
                     style={[
                         styles.statusBox,
                         {
@@ -232,10 +419,10 @@ const OrderCard = ({
                     </Text>
                     <Text style={styles.statusSub}>
                         {isReady
-                            ? "Customer has been notified."
-                            : "Est. completion: Jan 10, 2:00 PM"}
+                            ? "Click to mark as Completed."
+                            : "Click to mark as Ready."}
                     </Text>
-                </View>
+                </TouchableOpacity>
             )}
         </View>
     );

@@ -408,16 +408,56 @@ app.post("/manager-dashboard/:userId", async (req, res) => {
   }
 });
 
-app.get("/manager-orders", async (req, res) => {
-  try {
-    const [orders]: any = await database.query(`SELECT *  FROM print_jobs`);
+// app.get("/manager-orders", async (req, res) => {
+//   try {
+//     const [orders]: any = await database.query(`SELECT *  FROM print_jobs`);
 
-    res.json({
-      orders,
-    });
+//     res.json({
+//       orders,
+//     });
+//   } catch (err) {
+//     console.error("DASHBOARD ERROR:", err); // This prints the EXACT SQL error in your terminal
+//     res.status(500).json({ error: "Database error", details: err });
+//   }
+// });
+
+//TODO: PLEASE FIX THIS CODE!!!
+app.get("/manager-orders/:userId", async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  try {
+    // 1. Get the Shop ID owned by this manager
+    const [shops]: any = await database.query(
+      "SELECT id FROM print_shops WHERE print_shop_owner_id = ?",
+      [userId],
+    );
+
+    if (shops.length === 0) return res.json([]);
+
+    const shopId = shops[0].id;
+
+    // 2. Get all jobs for this shop
+    const [orders]: any = await database.query(
+      `SELECT * FROM print_jobs WHERE print_shop_id = ? ORDER BY created_at DESC`,
+      [shopId],
+    );
+
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error fetching manager orders" });
+  }
+});
+
+app.put("/update-order-status/:id", async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const query = `UPDATE print_jobs SET status = ? WHERE id = ?`;
+    await database.query(query, [status, id]);
+    res.status(200).json({ message: "Status updated" });
   } catch (err) {
-    console.error("DASHBOARD ERROR:", err); // This prints the EXACT SQL error in your terminal
-    res.status(500).json({ error: "Database error", details: err });
+    res.status(500).json({ error: "Database update failed" });
   }
 });
 
@@ -474,6 +514,27 @@ app.post(
     }
   },
 );
+
+// server.ts
+app.delete("/manager/delete-shop/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // We use DELETE to remove the record from the print_shops table
+    const query = `DELETE FROM print_shops WHERE print_shop_owner_id = ?`;
+
+    const [result]: any = await database.query(query, [userId]);
+
+    if (result.affectedRows > 0) {
+      res.status(200).json({ message: "Print Shop Deleted successfully!" });
+    } else {
+      res.status(404).json({ message: "Shop not found." });
+    }
+  } catch (error) {
+    console.error("Delete Error:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server running on http://localhost:${port}`);

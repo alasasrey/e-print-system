@@ -52,12 +52,12 @@ export default function ManagerDashboardScreen() {
                     setDailyRevenue(response.data?.dailyRevenue);
                     setTotalRevenue(response.data?.totalRevenue);
 
-                    console.log(`pending: ${response.data.pending}`);
-                    console.log(`processing: ${response.data.processing}`);
-                    console.log(`ready: ${response.data.ready}`);
-                    console.log(`approved: ${response.data.approved}`);
-                    console.log(`dailyRevenue: ${response.data.dailyRevenue}`);
-                    console.log(`totalRevenue: ${response.data.totalRevenue}`);
+                    // console.log(`pending: ${response.data.pending}`);
+                    // console.log(`processing: ${response.data.processing}`);
+                    // console.log(`ready: ${response.data.ready}`);
+                    // console.log(`approved: ${response.data.approved}`);
+                    // console.log(`dailyRevenue: ${response.data.dailyRevenue}`);
+                    // console.log(`totalRevenue: ${response.data.totalRevenue}`);
                 }
             } catch (err) {
                 console.error("Error fetching manager dashboard data:", err);
@@ -68,45 +68,28 @@ export default function ManagerDashboardScreen() {
 
     return (
         <>
-            {noShop ? (
-                <ManagerLayout
-                    currentRoute="dashboard"
-                    title="Dashboard Overview"
-                    subtitle="Monitor your print shop performance"
-                >
-                    <Ionicons name="storefront-outline" size={50} color="#0A0A1B" />
-                    <Text style={styles.setupTitle}>Welcome to e-Print!</Text>{" "}
-                    <Text style={styles.setupSub}>
-                        You haven't set up your shop profile yet.
-                    </Text>
-                    <TouchableOpacity
-                        style={styles.primaryButton}
-                        onPress={() => router.push("/(tabs)/manager/settings")}
-                    >
-                        <Text style={{ color: "#fff" }}>Configure Shop Now</Text>
-                    </TouchableOpacity>
-                </ManagerLayout>
-            ) : (
-                // Show your normal StatCards here
-                <ManagerLayout
-                    currentRoute="dashboard"
-                    title="Dashboard Overview"
-                    subtitle="Monitor your print shop performance"
-                >
-                    <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
-                        <Text
-                            style={{
-                                fontSize: isMobile ? 20 : 24,
-                                fontWeight: "bold",
-                                marginBottom: 5,
-                            }}
+            <ManagerLayout
+                currentRoute="dashboard"
+                title="Dashboard Overview"
+                subtitle="Monitor your print shop performance"
+            >
+                {noShop ? (
+                    <>
+                        <Ionicons name="storefront-outline" size={50} color="#0A0A1B" />
+                        <Text style={styles.setupTitle}>Welcome to e-Print!</Text>{" "}
+                        <Text style={styles.setupSub}>
+                            You haven't set up your shop profile yet.
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.primaryButton}
+                            onPress={() => router.push("/(tabs)/manager/settings")}
                         >
-                            Dashboard Overview
-                        </Text>
-                        <Text style={{ color: "#888", marginBottom: 25 }}>
-                            Monitor your print shop performance
-                        </Text>
-
+                            <Text style={{ color: "#fff" }}>Configure Shop Now</Text>
+                        </TouchableOpacity>
+                    </>
+                ) : (
+                    // Show your normal StatCards here
+                    <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
                         {/* STAT CARDS GRID - Responsive Columns */}
                         <View
                             style={{
@@ -165,8 +148,8 @@ export default function ManagerDashboardScreen() {
                             />
                         </View>
                     </ScrollView>
-                </ManagerLayout>
-            )}
+                )}
+            </ManagerLayout>
         </>
     );
 }
