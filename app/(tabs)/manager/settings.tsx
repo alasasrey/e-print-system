@@ -214,6 +214,7 @@
 import { ManagerLayout } from "@/components/ManagerLayout";
 import axiosInstance from "@/utils/axiosInstance";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router"; // Added router for redirection
 import React, { useState } from "react";
 import {
     Alert,
@@ -236,19 +237,14 @@ export default function ManagerSettingsScreen() {
 
     // 1. Setup State for all fields
     const [shopData, setShopData] = useState({
-        //THIS CODE IS JUST A DEFAULT OR PLACEHOLDER
-        name: "QuickPrint Express",
-        address: "Main Campus Building A, Room 101",
-        contactNumber: "09123456789",
+        // THIS CODE IS JUST A DEFAULT OR PLACEHOLDER
+        name: "",
+        address: "",
+        contactNumber: "",
         operatingHours: "Mon-Fri: 8:00 AM - 6:00 PM",
         isActive: true,
     });
 
-    // const [shopName, setshopName] = useState('');
-    // const [shopaddress, setShopAddress] = useState('');
-    // const [contactNumber, setContactNumber] = useState('');
-    // const [operatingHours, setOperatingHours] = useState('');
-    // const [isShopActive, setIsShopActive] = useState(true);
     const [loading, setLoading] = useState(false);
 
     // 2. Handle Update Function
@@ -261,7 +257,7 @@ export default function ManagerSettingsScreen() {
             const userId = await AsyncStorage.getItem("userId");
             const formData = new FormData();
 
-            formData.append("print_shop_owner_id", userId || "1");
+            formData.append("userId", userId || "1");
             formData.append("name", shopData?.name);
             formData.append("address", shopData?.address);
             formData.append("contactNumber", shopData?.contactNumber);
@@ -287,26 +283,44 @@ export default function ManagerSettingsScreen() {
         }
     };
 
+    // UPDATED FUNCTION: Deletes Shop + Deletes User Account + Clears Session
     const handleDeleteShop = async () => {
         Alert.alert(
-            "Confirm Deletion",
-            "This action is permanent. All your shop data will be lost. Are you sure?",
+            "Confirm Full Deletion",
+            "This will permanently delete your Print Shop AND your Manager Account. This action cannot be undone.",
             [
                 { text: "Cancel", style: "cancel" },
                 {
-                    text: "Delete My Shop",
+                    text: "Delete Everything",
                     style: "destructive",
                     onPress: async () => {
                         setLoading(true);
                         try {
                             const userId = await AsyncStorage.getItem("userId");
+
+                            if (!userId) {
+                                Alert.alert("Error", "User session not found.");
+                                return;
+                            }
+
+                            // 1. Delete the Print Shop
                             await axiosInstance.delete(`/manager/delete-shop/${userId}`);
 
-                            Alert.alert("Deleted", "Your shop account has been removed.");
-                            // Redirect user to home or setup page
-                            // navigation.replace('Welcome');
+                            // 2. NEW: Delete the User Account
+                            // Assuming your backend has an endpoint to delete the user by ID
+                            await axiosInstance.delete(`/manager/delete/print-shop-account/${userId}`);
+
+                            // 3. Clear all local storage (Auth Session)
+                            await AsyncStorage.multiRemove(["userId", "userRole", "userToken"]);
+
+                            Alert.alert("Account Deleted", "Your shop and account have been permanently removed.");
+
+                            // 4. Redirect to the Login screen
+                            router.replace("/(auth)/login");
+
                         } catch (error) {
-                            Alert.alert("Error", "Could not delete shop. Try again later.");
+                            console.error("Deletion error:", error);
+                            Alert.alert("Error", "Could not complete full deletion. Please try again.");
                         } finally {
                             setLoading(false);
                         }
@@ -336,7 +350,7 @@ export default function ManagerSettingsScreen() {
                                 onChangeText={(text) =>
                                     setShopData({ ...shopData, name: text })
                                 }
-                                placeholder="QuickPrint Express"
+                                placeholder="Your Shop Name"
                             />
                         </View>
 
@@ -348,7 +362,7 @@ export default function ManagerSettingsScreen() {
                                 onChangeText={(text) =>
                                     setShopData({ ...shopData, address: text })
                                 }
-                                placeholder="Address"
+                                placeholder="Your Address"
                             />
                         </View>
 
@@ -361,7 +375,7 @@ export default function ManagerSettingsScreen() {
                                     setShopData({ ...shopData, contactNumber: text })
                                 }
                                 keyboardType="phone-pad"
-                                placeholder="09123456789"
+                                placeholder="Your Contact Number"
                             />
                         </View>
 
@@ -373,7 +387,7 @@ export default function ManagerSettingsScreen() {
                                 onChangeText={(text) =>
                                     setShopData({ ...shopData, operatingHours: text })
                                 }
-                                placeholder="Mon-Fri: 8:00 AM - 6:00 PM"
+                                placeholder="For example: Mon-Fri: 8:00 AM - 6:00 PM"
                             />
                         </View>
 

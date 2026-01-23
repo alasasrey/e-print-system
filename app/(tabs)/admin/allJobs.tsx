@@ -1,3 +1,4 @@
+import { AdminLayout } from '@/components/AdminLayout';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from "expo-router";
 import React from "react";
@@ -16,10 +17,16 @@ export default function OrderManagementScreen() {
     const isMobile = width < 768;
 
     return (
-        <View style={{ flex: 1, flexDirection: isMobile ? 'column' : 'row', backgroundColor: '#F8F9FA' }}>
+        <AdminLayout
+            currentRoute="allJobs"
+            title="Order Management"
+            subtitle="View and manage incoming print jobs"
+        >
+            <View style={{ flex: 1, flexDirection: isMobile ? 'column' : 'row', backgroundColor: '#F8F9FA' }}>
 
-            {/* SIDEBAR - WEB ONLY */}
-            {!isMobile && (
+
+                {/* SIDEBAR - WEB ONLY */}
+                {/* {!isMobile && (
                 <View style={navStyles.sidebar}>
                     <View style={{ paddingHorizontal: 20, marginBottom: 30 }}>
                         <Text style={{ fontWeight: 'bold', fontSize: 18 }}>E-Print</Text>
@@ -38,80 +45,72 @@ export default function OrderManagementScreen() {
                         <Text style={navStyles.drawerText}>Settings</Text>
                     </TouchableOpacity>
                 </View>
-            )}
+            )} */}
 
-            {/* MAIN CONTENT */}
-            <View style={{ flex: 1 }}>
-                <View style={navStyles.header}>
-                    {isMobile && <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Order Management</Text>}
-                    <TouchableOpacity onPress={() => router.replace("/")} style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Ionicons name="log-out-outline" size={20} color="#666" />
-                        {!isMobile && <Text style={{ marginLeft: 5, color: '#666' }}>Logout</Text>}
-                    </TouchableOpacity>
-                </View>
+                {/* MAIN CONTENT */}
+                <View style={{ flex: 1 }}>
+                    <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
 
-                <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
-                    <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 5 }}>Order Management</Text>
-                    <Text style={{ color: '#888', marginBottom: 25 }}>View and manage incoming print jobs</Text>
-
-                    {/* SEARCH & FILTER BAR */}
-                    <View style={styles.filterContainer}>
-                        <View style={styles.searchBox}>
-                            <Ionicons name="search-outline" size={18} color="#AAA" />
-                            <TextInput
-                                placeholder="Search by student, filename, or job ID..."
-                                style={styles.searchInput}
-                            />
+                        {/* SEARCH & FILTER BAR */}
+                        <View style={styles.filterContainer}>
+                            <View style={styles.searchBox}>
+                                <Ionicons name="search-outline" size={18} color="#AAA" />
+                                <TextInput
+                                    placeholder="Search by student, filename, or job ID..."
+                                    style={styles.searchInput}
+                                />
+                            </View>
+                            <TouchableOpacity style={styles.filterButton}>
+                                <Ionicons name="filter-outline" size={18} color="#666" />
+                                <Text style={{ marginHorizontal: 8 }}>All Status</Text>
+                                <Ionicons name="chevron-down" size={16} color="#666" />
+                            </TouchableOpacity>
                         </View>
-                        <TouchableOpacity style={styles.filterButton}>
-                            <Ionicons name="filter-outline" size={18} color="#666" />
-                            <Text style={{ marginHorizontal: 8 }}>All Status</Text>
-                            <Ionicons name="chevron-down" size={16} color="#666" />
-                        </TouchableOpacity>
-                    </View>
 
-                    {/* ORDER LIST */}
-                    <OrderListItem
-                        fileName="Research_Paper_Final.pdf"
-                        student="John Student"
-                        jobId="job-1"
-                        status="PROCESSING"
-                        statusColor="#8B5CF6"
-                        details={{ pages: "3 x 15", size: "A4", mode: "B&W", binding: "Staple" }}
-                        submitted="Jan 08, 10:30"
-                        payment="PAID"
-                        cost="₱45.50"
-                        notes="Please bind on the left side"
-                        actions={['Mark as Ready', 'Chat with Student']}
-                        isMobile={isMobile}
-                    />
+                        {/* ORDER LIST */}
+                        <OrderListItem
+                            fileName="Research_Paper_Final.pdf"
+                            student="John Student"
+                            jobId="job-1"
+                            status="PROCESSING"
+                            statusColor="#8B5CF6"
+                            details={{ pages: "3 x 15", size: "A4", mode: "B&W", binding: "Staple" }}
+                            submitted="Jan 08, 10:30"
+                            payment="PAID"
+                            cost="₱45.50"
+                            notes="Please bind on the left side"
+                            actions={['Mark as Ready', 'Chat with Student']}
+                            isMobile={isMobile}
+                        />
 
-                    <OrderListItem
-                        fileName="Presentation_Slides.pptx"
-                        student="Sarah Lee"
-                        jobId="job-3"
-                        status="PENDING"
-                        statusColor="#FFB020"
-                        details={{ pages: "1 x 20", size: "A4", mode: "Color", binding: "None" }}
-                        submitted="Jan 08, 15:10"
-                        payment="UNPAID"
-                        cost="₱80.00"
-                        notes="Need by tomorrow morning"
-                        actions={['Approve', 'Reject', 'Chat with Student']}
-                        isMobile={isMobile}
-                    />
-                </ScrollView>
-            </View>
-
-            {/* MOBILE NAV */}
-            {isMobile && (
-                <View style={navStyles.bottomNav}>
-                    <TouchableOpacity onPress={() => router.push("/admin/dashboard")}><Ionicons name="grid-outline" size={24} color="#888" /></TouchableOpacity>
-                    <TouchableOpacity onPress={() => router.push("/admin/shops")}><Ionicons name="business" size={24} color="#888" /></TouchableOpacity>
-                    <TouchableOpacity><Ionicons name="document-text-outline" size={24} color="#0A0A1B" /></TouchableOpacity>
+                        <OrderListItem
+                            fileName="Presentation_Slides.pptx"
+                            student="Sarah Lee"
+                            jobId="job-3"
+                            status="PENDING"
+                            statusColor="#FFB020"
+                            details={{ pages: "1 x 20", size: "A4", mode: "Color", binding: "None" }}
+                            submitted="Jan 08, 15:10"
+                            payment="UNPAID"
+                            cost="₱80.00"
+                            notes="Need by tomorrow morning"
+                            actions={['Approve', 'Reject', 'Chat with Student']}
+                            isMobile={isMobile}
+                        />
+                    </ScrollView>
                 </View>
-            )}
-        </View>
+
+                {/* MOBILE NAV */}
+                {isMobile && (
+                    <View style={navStyles.bottomNav}>
+                        <TouchableOpacity onPress={() => router.push("/admin/dashboard")}><Ionicons name="grid-outline" size={24} color="#888" /></TouchableOpacity>
+                        <TouchableOpacity onPress={() => router.push("/admin/shops")}><Ionicons name="business" size={24} color="#888" /></TouchableOpacity>
+                        <TouchableOpacity><Ionicons name="document-text-outline" size={24} color="#0A0A1B" /></TouchableOpacity>
+                    </View>
+                )}
+            </View>
+        </AdminLayout>
+
     );
 }
 

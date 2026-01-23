@@ -139,13 +139,6 @@ app.post("/register", async (req: Request, res: Response) => {
       [fullName, studentId, email, passwordHash, role || "student"],
     );
 
-    if (role === "manager") {
-      await database.query(
-        "INSERT INTO print_shops (print_shop_owner_id, name, is_active) VALUES (?, ?, ?)",
-        [result.id, "My New Print Shop", false], // Set as inactive by default or 0
-      );
-    }
-
     // Generate token so the user can be logged in immediately
     const token = jwt.sign(
       { userId: result.insertId, email: email },
@@ -165,6 +158,7 @@ app.post("/register", async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error registering user" });
   }
 });
+
 
 // ==================================================================
 //STUDENT
@@ -316,12 +310,12 @@ app.get("/print-shops", async (req, res) => {
 
 // MANAGERS
 // GET only shops owned by a specific owner (For the Owner App)
-app.get("/my-shops/:ownerId", async (req, res) => {
-  const { ownerId } = req.params;
+app.get("/my-shops/:userId", async (req, res) => {
+  const { userId } = req.params;
   try {
     const [rows] = await database.query(
       "SELECT * FROM print_shops WHERE print_shop_owner_id = ?",
-      [ownerId],
+      [userId],
     );
 
     res.json(rows);
@@ -338,7 +332,7 @@ app.get("/manager-dashboard/:userId", async (req, res) => {
   try {
     // 1. Check if manager has a shop
     const [shop]: any = await database.query(
-      "SELECT id FROM print_shops WHERE print_shop_owner_id  = ?",
+      "SELECT id FROM print_shops WHERE user_id = ?",
       [userId],
     );
 
@@ -427,7 +421,7 @@ app.get("/manager-orders/:userId", async (req: Request, res: Response) => {
   try {
     // 1. Get the Shop ID owned by this manager
     const [shops]: any = await database.query(
-      "SELECT id FROM print_shops WHERE print_shop_owner_id = ?",
+      "SELECT id FROM print_shops WHERE user_id = ?",
       [userId],
     );
 
@@ -469,7 +463,7 @@ app.post(
   async (req: Request, res: Response) => {
     try {
       const {
-        print_shop_owner_id,
+        userId,
         name,
         address,
         contactNumber, // from frontend
@@ -480,7 +474,7 @@ app.post(
       // The query columns MUST match your DESCRIBE output exactly
       const query = `
       INSERT INTO print_shops 
-      (print_shop_owner_id, name, address, contact_number, operating_hours, is_active) 
+      (user_id, name, address, contact_number, operating_hours, is_active) 
       VALUES (?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE 
         name = VALUES(name),
@@ -491,7 +485,7 @@ app.post(
     `;
 
       const values = [
-        print_shop_owner_id,
+        userId,
         name,
         address,
         contactNumber, // Maps to contact_number
@@ -521,7 +515,7 @@ app.delete("/manager/delete-shop/:userId", async (req, res) => {
     const { userId } = req.params;
 
     // We use DELETE to remove the record from the print_shops table
-    const query = `DELETE FROM print_shops WHERE print_shop_owner_id = ?`;
+    const query = `DELETE FROM print_shops WHERE user_id = ?`;
 
     const [result]: any = await database.query(query, [userId]);
 
@@ -535,6 +529,40 @@ app.delete("/manager/delete-shop/:userId", async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
+app.delete('/manager/delete/print-shop-account/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // We use DELETE to remove the record from the print_shops table
+    const query = `DELETE FROM users WHERE id = ?`;
+
+    const [result]: any = await database.query(query, [userId]);
+
+    if (result.affectedRows > 0) {
+      res.status(200).json({ message: "Print Shop Account Deleted successfully!" });
+    } else {
+      res.status(404).json({ message: "Print Shop Account not found." });
+    }
+  } catch (error) {
+    console.error("Delete Error:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+// -===============================================================================
+
+// ADMIN
+
+//TODO: MAYBE FOR FUTURE ADMIN REGISTRATION FOR MANAGERS???
+// if (role === "manager") {
+//   await database.query(
+//     "INSERT INTO print_shops (user_id, name, is_active) VALUES (?, ?, ?)",
+//     [result.id, "My New Print Shop", false], // Set as inactive by default or 0
+//   );
+// }
+
+// ==============================================================================
 
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server running on http://localhost:${port}`);

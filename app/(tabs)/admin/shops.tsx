@@ -1,3 +1,4 @@
+import { AdminLayout } from '@/components/AdminLayout';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from "expo-router";
 import React from "react";
@@ -16,74 +17,52 @@ export default function ShopManagementScreen() {
     const isMobile = width < 768;
 
     return (
-        <View style={{ flex: 1, flexDirection: isMobile ? 'column' : 'row', backgroundColor: '#F8F9FA' }}>
+        <AdminLayout
+            currentRoute="shops"
+            title="Shop Management"
+            subtitle="Manage and monitor print shop accounts"
+        >
 
-            {/* SIDEBAR - WEB ONLY */}
-            {!isMobile && (
-                <View style={navStyles.sidebar}>
-                    <View style={{ paddingHorizontal: 20, marginBottom: 30 }}>
-                        <Text style={{ fontWeight: 'bold', fontSize: 18 }}>E-Print</Text>
-                        <Text style={{ fontSize: 12, color: '#888' }}>Admin Panel</Text>
-                    </View>
-                    <AdminNavItem label="Dashboard" icon="grid-outline" onPress={() => router.push("/admin/dashboard")} />
-                    <AdminNavItem label="Shops" icon="business" active />
-                    <AdminNavItem label="All Jobs" icon="document-text-outline" />
-                </View>
-            )}
 
-            {/* MAIN CONTENT */}
-            <View style={{ flex: 1 }}>
-                <View style={navStyles.header}>
-                    {isMobile && <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Shops</Text>}
-                    <TouchableOpacity style={styles.createBtnHeader} onPress={() => { }}>
-                        <Ionicons name="add" size={18} color="white" />
-                        <Text style={{ color: 'white', fontWeight: 'bold', marginLeft: 5 }}>Create Shop</Text>
-                    </TouchableOpacity>
+            <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
+                {/* TOP SUMMARY CARDS */}
+                <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
+                    <SummaryCard label="Total Shops" value="3" isMobile={isMobile} />
+                    <SummaryCard label="Active Shops" value="3" color="#10B981" isMobile={isMobile} />
+                    <SummaryCard label="Pending Approval" value="0" color="#FFB020" isMobile={isMobile} />
                 </View>
 
-                <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
-                    <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Shop Management</Text>
-                    <Text style={{ color: '#888', marginBottom: 20 }}>Manage and monitor print shop accounts</Text>
+                {/* SEARCH BAR */}
+                <View style={styles.searchContainer}>
+                    <Ionicons name="search-outline" size={20} color="#AAA" />
+                    <TextInput placeholder="Search shops by name, location, or email..." style={styles.searchInput} />
+                </View>
 
-                    {/* TOP SUMMARY CARDS */}
-                    <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
-                        <SummaryCard label="Total Shops" value="3" isMobile={isMobile} />
-                        <SummaryCard label="Active Shops" value="3" color="#10B981" isMobile={isMobile} />
-                        <SummaryCard label="Pending Approval" value="0" color="#FFB020" isMobile={isMobile} />
-                    </View>
+                {/* SHOP LIST */}
+                <ShopCard
+                    name="QuickPrint Express"
+                    id="shop-1"
+                    location="Main Campus Building A, Room 101"
+                    contact="+63 923 456 7890"
+                    email="quickprint@campus.edu"
+                    rating="4.8"
+                    hours="Mon-Fri: 8:00 AM - 6:00 PM"
+                    types={['pdf', 'docx', 'jpg', 'png']}
+                    isMobile={isMobile}
+                />
 
-                    {/* SEARCH BAR */}
-                    <View style={styles.searchContainer}>
-                        <Ionicons name="search-outline" size={20} color="#AAA" />
-                        <TextInput placeholder="Search shops by name, location, or email..." style={styles.searchInput} />
-                    </View>
-
-                    {/* SHOP LIST */}
-                    <ShopCard
-                        name="QuickPrint Express"
-                        id="shop-1"
-                        location="Main Campus Building A, Room 101"
-                        contact="+63 923 456 7890"
-                        email="quickprint@campus.edu"
-                        rating="4.8"
-                        hours="Mon-Fri: 8:00 AM - 6:00 PM"
-                        types={['pdf', 'docx', 'jpg', 'png']}
-                        isMobile={isMobile}
-                    />
-
-                    <ShopCard
-                        name="Campus Copy Center"
-                        id="shop-2"
-                        location="Library Building, Ground Floor"
-                        contact="+63 945 678 9012"
-                        email="copycenter@campus.edu"
-                        rating="4.5"
-                        hours="Mon-Sat: 7:00 AM - 8:00 PM"
-                        types={['pdf', 'docx', 'png']}
-                        isMobile={isMobile}
-                    />
-                </ScrollView>
-            </View>
+                <ShopCard
+                    name="Campus Copy Center"
+                    id="shop-2"
+                    location="Library Building, Ground Floor"
+                    contact="+63 945 678 9012"
+                    email="copycenter@campus.edu"
+                    rating="4.5"
+                    hours="Mon-Sat: 7:00 AM - 8:00 PM"
+                    types={['pdf', 'docx', 'png']}
+                    isMobile={isMobile}
+                />
+            </ScrollView>
 
             {/* MOBILE BOTTOM NAV */}
             {isMobile && (
@@ -93,7 +72,9 @@ export default function ShopManagementScreen() {
                     <TouchableOpacity onPress={() => router.push("/admin/allJobs")}><Ionicons name="document-text-outline" size={24} color="#888" /></TouchableOpacity>
                 </View>
             )}
-        </View>
+
+        </AdminLayout>
+
     );
 }
 
@@ -131,6 +112,8 @@ const ShopCard = ({ name, id, location, contact, email, rating, hours, types, is
             <Ionicons name="remove-circle-outline" size={16} color="white" />
             <Text style={{ color: 'white', fontWeight: 'bold', marginLeft: 5 }}>Suspend</Text>
         </TouchableOpacity>
+
+
     </View>
 );
 

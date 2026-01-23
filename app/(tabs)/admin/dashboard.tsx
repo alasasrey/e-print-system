@@ -1,5 +1,5 @@
+import { AdminLayout } from '@/components/AdminLayout';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from "expo-router";
 import React from "react";
 import {
     ScrollView,
@@ -16,74 +16,59 @@ export default function AdminDashboardScreen() {
 
     return (
         <View style={{ flex: 1, flexDirection: isMobile ? 'column' : 'row', backgroundColor: '#F8F9FA' }}>
+            <AdminLayout
+                currentRoute="dashboard"
+                title="System Overview"
+                subtitle="Monitor platform-wide metrics and performance"
+            >
 
-            {/* ADMIN SIDEBAR - WEB ONLY */}
-            {!isMobile && (
-                <View style={navStyles.sidebar}>
-                    <View style={{ paddingHorizontal: 20, marginBottom: 30 }}>
-                        <Text style={{ fontWeight: 'bold', fontSize: 18 }}>E-Print</Text>
-                        <Text style={{ fontSize: 12, color: '#888' }}>Admin Panel</Text>
-                    </View>
-                    <AdminNavItem label="Dashboard" icon="grid" active />
-                    <AdminNavItem label="Shops" icon="business-outline" />
-                    <AdminNavItem label="All Jobs" icon="document-text-outline" />
-                </View>
-            )}
+                {/* MAIN CONTENT AREA */}
+                <View style={{ flex: 1 }}>
+                    {/* HEADER */}
+                    {/* <View style={navStyles.header}>
+                        {isMobile && <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Admin Overview</Text>}
+                        <TouchableOpacity onPress={() => router.replace("/")} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Ionicons name="log-out-outline" size={20} color="#666" />
+                            {!isMobile && <Text style={{ marginLeft: 5, color: '#666' }}>Logout</Text>}
+                        </TouchableOpacity>
+                    </View> */}
 
-            {/* MAIN CONTENT AREA */}
-            <View style={{ flex: 1 }}>
-                {/* HEADER */}
-                <View style={navStyles.header}>
-                    {isMobile && <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Admin Overview</Text>}
-                    <TouchableOpacity onPress={() => router.replace("/")} style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Ionicons name="log-out-outline" size={20} color="#666" />
-                        {!isMobile && <Text style={{ marginLeft: 5, color: '#666' }}>Logout</Text>}
-                    </TouchableOpacity>
-                </View>
+                    <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
 
-                <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
-                    <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 5 }}>System Overview</Text>
-                    <Text style={{ color: '#888', marginBottom: 25 }}>Monitor platform-wide metrics and performance</Text>
-
-                    {/* TOP METRICS ROW */}
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 15 }}>
-                        <MetricCard label="Total Users" value="1" sub="Registered students" icon="people-outline" isMobile={isMobile} />
-                        <MetricCard label="Print Shops" value="3/3" sub="Active / Total shops" icon="business-outline" isMobile={isMobile} />
-                        <MetricCard label="Total Jobs" value="3" sub="+3 today" icon="document-outline" isMobile={isMobile} />
-                        <MetricCard label="Total Revenue" value="₱0.00" sub="₱0.00 today" icon="cash-outline" isMobile={isMobile} />
-                    </View>
-
-                    {/* CHARTS / PERFORMANCE SECTION */}
-                    <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: 20, marginTop: 20 }}>
-
-                        {/* JOB STATUS DISTRIBUTION */}
-                        <View style={[styles.largeCard, { flex: 1 }]}>
-                            <Text style={styles.cardTitle}>Job Status Distribution</Text>
-                            <StatusRow label="Pending" count={1} color="#FFB020" />
-                            <StatusRow label="Processing" count={1} color="#8B5CF6" />
-                            <StatusRow label="Ready" count={0} color="#10B981" />
-                            <StatusRow label="Completed" count={0} color="#10B981" />
+                        {/* TOP METRICS ROW */}
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 15 }}>
+                            <MetricCard label="Total Users" value="1" sub="Registered students" icon="people-outline" isMobile={isMobile} />
+                            <MetricCard label="Print Shops" value="3/3" sub="Active / Total shops" icon="business-outline" isMobile={isMobile} />
+                            <MetricCard label="Total Jobs" value="3" sub="+3 today" icon="document-outline" isMobile={isMobile} />
+                            <MetricCard label="Total Revenue" value="₱0.00" sub="₱0.00 today" icon="cash-outline" isMobile={isMobile} />
                         </View>
 
-                        {/* SHOP PERFORMANCE */}
-                        <View style={[styles.largeCard, { flex: 1.5 }]}>
-                            <Text style={styles.cardTitle}>Shop Performance</Text>
-                            <ShopRow name="QuickPrint Express" revenue="₱0.00" jobs={0} />
-                            <ShopRow name="Campus Copy Center" revenue="₱0.00" jobs={0} />
-                            <ShopRow name="Student Print Hub" revenue="₱0.00" jobs={0} />
-                        </View>
-                    </View>
-                </ScrollView>
-            </View>
+                        {/* CHARTS / PERFORMANCE SECTION */}
+                        <View style={{ flexDirection: isMobile ? 'column' : 'row', gap: 20, marginTop: 20 }}>
 
-            {/* MOBILE NAV - ANDROID ONLY */}
-            {isMobile && (
-                <View style={navStyles.bottomNav}>
-                    <TouchableOpacity><Ionicons name="grid" size={24} color="#0A0A1B" /></TouchableOpacity>
-                    <TouchableOpacity onPress={() => router.push("/admin/shops")}><Ionicons name="business-outline" size={24} color="#888" /></TouchableOpacity>
-                    <TouchableOpacity onPress={() => router.push("/admin/allJobs")}><Ionicons name="document-text-outline" size={24} color="#888" /></TouchableOpacity>
+                            {/* JOB STATUS DISTRIBUTION */}
+                            <View style={[styles.largeCard, { flex: 1 }]}>
+                                <Text style={styles.cardTitle}>Job Status Distribution</Text>
+                                <StatusRow label="Pending" count={1} color="#FFB020" />
+                                <StatusRow label="Processing" count={1} color="#8B5CF6" />
+                                <StatusRow label="Ready" count={0} color="#10B981" />
+                                <StatusRow label="Completed" count={0} color="#10B981" />
+                            </View>
+
+                            {/* SHOP PERFORMANCE */}
+                            <View style={[styles.largeCard, { flex: 1.5 }]}>
+                                <Text style={styles.cardTitle}>Shop Performance</Text>
+                                <ShopRow name="QuickPrint Express" revenue="₱0.00" jobs={0} />
+                                <ShopRow name="Campus Copy Center" revenue="₱0.00" jobs={0} />
+                                <ShopRow name="Student Print Hub" revenue="₱0.00" jobs={0} />
+                            </View>
+                        </View>
+                    </ScrollView>
                 </View>
-            )}
+
+            </AdminLayout>
+
+
         </View>
     );
 }
