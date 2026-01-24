@@ -27,6 +27,7 @@ export const AdminLayout = ({
     const isMobile = width < 768;
 
     return (
+
         <View
             style={{
                 flex: 1,
@@ -130,6 +131,7 @@ export const AdminLayout = ({
                 </View>
             )}
         </View>
+
     );
 };
 

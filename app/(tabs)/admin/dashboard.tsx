@@ -24,14 +24,7 @@ export default function AdminDashboardScreen() {
 
                 {/* MAIN CONTENT AREA */}
                 <View style={{ flex: 1 }}>
-                    {/* HEADER */}
-                    {/* <View style={navStyles.header}>
-                        {isMobile && <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Admin Overview</Text>}
-                        <TouchableOpacity onPress={() => router.replace("/")} style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Ionicons name="log-out-outline" size={20} color="#666" />
-                            {!isMobile && <Text style={{ marginLeft: 5, color: '#666' }}>Logout</Text>}
-                        </TouchableOpacity>
-                    </View> */}
+
 
                     <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
 

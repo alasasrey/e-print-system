@@ -24,29 +24,6 @@ export default function OrderManagementScreen() {
         >
             <View style={{ flex: 1, flexDirection: isMobile ? 'column' : 'row', backgroundColor: '#F8F9FA' }}>
 
-
-                {/* SIDEBAR - WEB ONLY */}
-                {/* {!isMobile && (
-                <View style={navStyles.sidebar}>
-                    <View style={{ paddingHorizontal: 20, marginBottom: 30 }}>
-                        <Text style={{ fontWeight: 'bold', fontSize: 18 }}>E-Print</Text>
-                        <Text style={{ fontSize: 12, color: '#888' }}>Shop Manager</Text>
-                    </View>
-                    <TouchableOpacity style={navStyles.drawerItem} onPress={() => router.push("/manager/dashboard")}>
-                        <Ionicons name="grid-outline" size={20} color="#666" />
-                        <Text style={navStyles.drawerText}>Dashboard</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[navStyles.drawerItem, navStyles.activeItem]}>
-                        <Ionicons name="list" size={20} color="white" />
-                        <Text style={[navStyles.drawerText, { color: 'white' }]}>Orders</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={navStyles.drawerItem} onPress={() => router.push("/manager/settings")}>
-                        <Ionicons name="settings-outline" size={20} color="#666" />
-                        <Text style={navStyles.drawerText}>Settings</Text>
-                    </TouchableOpacity>
-                </View>
-            )} */}
-
                 {/* MAIN CONTENT */}
                 <View style={{ flex: 1 }}>
                     <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>

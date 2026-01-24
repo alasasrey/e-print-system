@@ -10,7 +10,7 @@ const poolConfig: PoolOptions = {
   user: 'root',
   password: '', // Replace with your password
   database: 'e_print', // Replace with your database name
-//   waitForConnections: true,
+  //   waitForConnections: true,
 };
 
 const database = mysql.createPool(poolConfig);

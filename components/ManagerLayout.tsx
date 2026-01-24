@@ -27,6 +27,7 @@ export const ManagerLayout = ({
     const isMobile = width < 768;
 
     return (
+
         <View
             style={{
                 flex: 1,
@@ -34,6 +35,7 @@ export const ManagerLayout = ({
                 backgroundColor: "#F8F9FA",
             }}
         >
+
             {/* SIDEBAR - Desktop */}
             {!isMobile && (
                 <View style={navStyles.sidebar}>
@@ -123,6 +125,7 @@ export const ManagerLayout = ({
                 </View>
             )}
         </View>
+
     );
 };
 

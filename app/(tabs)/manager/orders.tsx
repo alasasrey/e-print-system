@@ -121,43 +121,6 @@ export default function ManagerOrdersScreen() {
     };
 
     return (
-        // <ManagerLayout currentRoute="orders" title="Order Dashboard">
-        //     <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
-        //         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 20 }}>
-        //             {/* if the orders is greater than 0 then display it, else no orders */}
-        //             {orders.length > 0 ? (
-        //                 orders.map((order: any) => (
-        //                     <OrderCard
-        //                         key={order.id}
-        //                         status={order.status}
-        //                         statusColor={getStatusColor(order.status)}
-        //                         title={order.file_name || "Untitled Job"}
-        //                         price={`₱${parseFloat(order.total_price).toFixed(2)}`}
-        //                         orderId={`ORD-${order.id}`}
-        //                         details={{
-        //                             pages: `${order.copies} x ${order.pages}`,
-        //                             size: order.paper_size,
-        //                             mode: order.color_mode,
-        //                             binding: order.binding,
-        //                         }}
-        //                         isMobile={isMobile}
-        //                     />
-        //                 ))
-        //             ) : (
-        //                 <Text
-        //                     style={{
-        //                         textAlign: "center",
-        //                         width: "100%",
-        //                         marginTop: 50,
-        //                         color: "#888",
-        //                     }}
-        //                 >
-        //                     No orders found.
-        //                 </Text>
-        //             )}
-        //         </View>
-        //     </ScrollView>
-        // </ManagerLayout>
 
         <ManagerLayout currentRoute="orders" title="Order Dashboard">
             <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
@@ -180,6 +143,7 @@ export default function ManagerOrdersScreen() {
                                 }}
                                 isMobile={isMobile}
                                 onUpdateStatus={handleUpdateStatus} // Pass the function here
+                                onHandleDecline={handleDecline} // Pass the function here too
                             />
                         ))
                     ) : (
@@ -216,86 +180,6 @@ const SidebarItem = ({ icon, label, onPress, active }: any) => (
     </TouchableOpacity>
 );
 
-// const OrderCard = ({
-//     id, // Make sure to receive the raw numeric ID
-//     status,
-//     statusColor,
-//     title,
-//     price,
-//     orderId,
-//     details,
-//     isMobile,
-//     onUpdateStatus, // Add this prop
-// }: any) => {
-//     const currentStatus = status?.toLowerCase();
-//     const isPending = currentStatus === "pending";
-//     const isProcessing = currentStatus === "processing";
-//     const isReady = currentStatus === "ready";
-
-//     return (
-//         <View style={[styles.card, { width: isMobile ? "100%" : "48%" }]}>
-//             {/* ... rest of your header code ... */}
-
-//             <Text style={styles.title}>{title}</Text>
-
-//             <View style={styles.detailsGrid}>
-//                 <DetailItem label="Copies x Pages" value={details.pages} />
-//                 <DetailItem label="Paper Size" value={details.size} />
-//                 <DetailItem label="Color Mode" value={details.mode} />
-//                 <DetailItem label="Binding" value={details.binding} />
-//             </View>
-
-//             {/* ACTION AREA */}
-//             {isPending ? (
-//                 <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}>
-//                     <TouchableOpacity
-//                         style={[styles.actionButton, styles.declineButton]}
-//                         onPress={() => onUpdateStatus(id, "declined")} // CALL DECLINE
-//                     >
-//                         <Text style={styles.declineText}>Decline</Text>
-//                     </TouchableOpacity>
-
-//                     <TouchableOpacity
-//                         style={[styles.actionButton, styles.acceptButton]}
-//                         onPress={() => onUpdateStatus(id, "processing")} // CALL ACCEPT
-//                     >
-//                         <Text style={styles.acceptText}>Accept Job</Text>
-//                     </TouchableOpacity>
-//                 </View>
-//             ) : (
-//                 <TouchableOpacity
-//                     onPress={() => {
-//                         // Logic to move from Processing -> Ready -> Completed
-//                         if (isProcessing) onUpdateStatus(id, "ready");
-//                         else if (isReady) onUpdateStatus(id, "completed");
-//                     }}
-//                     style={[
-//                         styles.statusBox,
-//                         {
-//                             backgroundColor: isReady ? "#E8F9F1" : "#EBF5FF",
-//                             borderColor: isReady ? "#C6F6D5" : "#BEE3F8",
-//                         },
-//                     ]}
-//                 >
-//                     <Text
-//                         style={[
-//                             styles.statusTitle,
-//                             { color: isReady ? "#22543D" : "#2B6CB0" },
-//                         ]}
-//                     >
-//                         {isReady ? "✓ Ready for Pickup" : "Printing in Progress..."}
-//                     </Text>
-//                     <Text style={styles.statusSub}>
-//                         {isReady
-//                             ? "Click to mark as Completed."
-//                             : "Click to mark as Ready."}
-//                     </Text>
-//                 </TouchableOpacity>
-//             )}
-//         </View>
-//     );
-// };
-
 const OrderCard = ({
     id, // Make sure to receive the raw numeric ID
     status,
@@ -306,6 +190,7 @@ const OrderCard = ({
     details,
     isMobile,
     onUpdateStatus, // Add this prop
+    onHandleDecline
 }: any) => {
     const currentStatus = status?.toLowerCase();
     const isPending = currentStatus === "pending";
@@ -356,7 +241,7 @@ const OrderCard = ({
                     <TouchableOpacity style={[styles.actionButton, styles.declineButton]}>
                         <Text
                             style={styles.declineText}
-                            onPress={() => onUpdateStatus(id, "declined")} // CALL DECLINE
+                            onPress={onHandleDecline(id)} // CALL DECLINE
                         >
                             Decline
                         </Text>
@@ -371,29 +256,6 @@ const OrderCard = ({
                     </TouchableOpacity>
                 </View>
             ) : (
-                // <View
-                //     style={[
-                //         styles.statusBox,
-                //         {
-                //             backgroundColor: isReady ? "#E8F9F1" : "#EBF5FF",
-                //             borderColor: isReady ? "#C6F6D5" : "#BEE3F8",
-                //         },
-                //     ]}
-                // >
-                //     <Text
-                //         style={[
-                //             styles.statusTitle,
-                //             { color: isReady ? "#22543D" : "#2B6CB0" },
-                //         ]}
-                //     >
-                //         {isReady ? "✓ Ready for Pickup" : "Printing in Progress..."}
-                //     </Text>
-                //     <Text style={styles.statusSub}>
-                //         {isReady
-                //             ? "Customer has been notified."
-                //             : "Est. completion: Jan 10, 2:00 PM"}
-                //     </Text>
-                // </View>
 
                 <TouchableOpacity
                     onPress={() => {

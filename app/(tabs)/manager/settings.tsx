@@ -212,10 +212,11 @@
 // });
 
 import { ManagerLayout } from "@/components/ManagerLayout";
+import { styles as style } from "@/styles/studentStyles";
 import axiosInstance from "@/utils/axiosInstance";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router"; // Added router for redirection
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Alert,
     Platform,
@@ -246,6 +247,40 @@ export default function ManagerSettingsScreen() {
     });
 
     const [loading, setLoading] = useState(false);
+
+    const [fullname, setFullname] = useState("");
+    const [email, setEmail] = useState("");
+
+    useEffect(() => {
+        const getUserData = async () => {
+            try {
+                const userId = await AsyncStorage.getItem("userId");
+                if (userId) {
+                    const response = await axiosInstance.get(`/profile/${userId}`);
+                    setFullname(response.data.fullname);
+                    setEmail(response.data.email);
+                }
+            } catch (err) {
+                console.error("Error fetching profile:", err);
+            }
+        };
+        getUserData();
+
+        const getPrintShopData = async () => {
+            try {
+                const userId = await AsyncStorage.getItem("userId");
+                if (userId) {
+                    const response = await axiosInstance.get(`/profile/${userId}`);
+                    // setFullname(response.data.fullname);
+                    // setEmail(response.data.email);
+                }
+            } catch (err) {
+                console.error("Error fetching print shop data:", err);
+            }
+        };
+        getPrintShopData();
+    }, []);
+
 
     // 2. Handle Update Function
     const handleUpdate = async () => {
@@ -337,6 +372,56 @@ export default function ManagerSettingsScreen() {
             subtitle="Manage your print shop profile and preferences"
         >
             <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
+
+                {/* MANAGER PROFILE AREA */}
+                <View style={style.formCard}>
+                    <Text style={styles.sectionTitle}>Manager Profile Information</Text>
+
+                    <View style={{ marginBottom: 20 }}>
+                        <Text style={style.smallLabel}>Name</Text>
+                        <Text style={[style.detailValue, { fontSize: 16, marginTop: 4 }]}>
+                            {fullname}
+                        </Text>
+                    </View>
+
+                    <View style={{ marginBottom: 10 }}>
+                        <Text style={style.smallLabel}>Email</Text>
+                        <Text style={[style.detailValue, { fontSize: 16, marginTop: 4 }]}>
+                            {email}
+                        </Text>
+                    </View>
+
+                    <View style={{ marginBottom: 10 }}>
+                        <Text style={style.smallLabel}>Shop Name</Text>
+                        <Text style={[style.detailValue, { fontSize: 16, marginTop: 4 }]}>
+                            {email}
+                        </Text>
+                    </View>
+
+                    <View style={{ marginBottom: 10 }}>
+                        <Text style={style.smallLabel}>Location / Address</Text>
+                        <Text style={[style.detailValue, { fontSize: 16, marginTop: 4 }]}>
+                            {email}
+                        </Text>
+                    </View>
+
+                    <View style={{ marginBottom: 10 }}>
+                        <Text style={style.smallLabel}>Contact Number</Text>
+                        <Text style={[style.detailValue, { fontSize: 16, marginTop: 4 }]}>
+                            {email}
+                        </Text>
+                    </View>
+
+                    <View style={{ marginBottom: 10 }}>
+                        <Text style={style.smallLabel}>Operating Hours</Text>
+                        <Text style={[style.detailValue, { fontSize: 16, marginTop: 4 }]}>
+                            {email}
+                        </Text>
+                    </View>
+                </View>
+
+
+                {/* SHOP SETTINGS AREA  */}
                 <View style={{ flexDirection: isMobile ? "column" : "row", gap: 20 }}>
                     {/* SHOP INFORMATION SECTION */}
                     <View style={[styles.card, { flex: isMobile ? 0 : 2 }]}>
