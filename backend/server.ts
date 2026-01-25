@@ -313,19 +313,18 @@ app.get("/print-shops", async (req, res) => {
 app.get("/my-shops/:userId", async (req, res) => {
   const { userId } = req.params;
   try {
-    const [rows] = await database.query(
-      "SELECT * FROM print_shops WHERE print_shop_owner_id = ?",
+    const [myShop] = await database.query(
+      "SELECT * FROM print_shops WHERE user_id = ?",
       [userId],
     );
 
-    res.json(rows);
+
+    //PUTTING THIS IN AN OBJECT SO THAT I CAN SEND ONE
+    res.json(myShop);
   } catch (error) {
     res.status(500).json({ message: "Error fetching your shops" });
   }
 });
-
-//FINISH THIS CODE
-// backend/server.ts
 
 app.get("/manager-dashboard/:userId", async (req, res) => {
   const { userId } = req.params;
@@ -377,6 +376,7 @@ app.get("/manager-dashboard/:userId", async (req, res) => {
 });
 
 //FINISH THIS CODE
+//WHAT IS THIS CODE USE FOR????
 app.post("/manager-dashboard/:userId", async (req, res) => {
   try {
     const { userId } = req.body;

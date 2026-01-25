@@ -21,9 +21,9 @@ import {
 
 interface Shop {
     id: string;
-    print_shop_owner_id: number;
+    print_shop_id: number;
     name: string;
-    location: string;
+    address: string;
     is_active: boolean;
 }
 
@@ -31,23 +31,23 @@ interface Shop {
 const shops: Shop[] = [
     {
         id: "1",
-        print_shop_owner_id: 5,
+        print_shop_id: 5,
         name: "QuickPrint Express",
-        location: "san miguel",
+        address: "san miguel",
         is_active: true,
     },
     {
         id: "2",
-        print_shop_owner_id: 5,
+        print_shop_id: 5,
         name: "Campus Copy Center",
-        location: "san miguel",
+        address: "san miguel",
         is_active: true,
     },
     {
         id: "3",
-        print_shop_owner_id: 5,
+        print_shop_id: 5,
         name: "Student Print Hub",
-        location: "san miguel",
+        address: "san miguel",
         is_active: true,
     },
 ];

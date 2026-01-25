@@ -241,7 +241,7 @@ const OrderCard = ({
                     <TouchableOpacity style={[styles.actionButton, styles.declineButton]}>
                         <Text
                             style={styles.declineText}
-                            onPress={onHandleDecline(id)} // CALL DECLINE
+                            onPress={() => onHandleDecline(id)} // CALL DECLINE
                         >
                             Decline
                         </Text>

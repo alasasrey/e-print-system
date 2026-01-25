@@ -251,37 +251,6 @@ export default function ManagerSettingsScreen() {
     const [fullname, setFullname] = useState("");
     const [email, setEmail] = useState("");
 
-    useEffect(() => {
-        const getUserData = async () => {
-            try {
-                const userId = await AsyncStorage.getItem("userId");
-                if (userId) {
-                    const response = await axiosInstance.get(`/profile/${userId}`);
-                    setFullname(response.data.fullname);
-                    setEmail(response.data.email);
-                }
-            } catch (err) {
-                console.error("Error fetching profile:", err);
-            }
-        };
-        getUserData();
-
-        const getPrintShopData = async () => {
-            try {
-                const userId = await AsyncStorage.getItem("userId");
-                if (userId) {
-                    const response = await axiosInstance.get(`/profile/${userId}`);
-                    // setFullname(response.data.fullname);
-                    // setEmail(response.data.email);
-                }
-            } catch (err) {
-                console.error("Error fetching print shop data:", err);
-            }
-        };
-        getPrintShopData();
-    }, []);
-
-
     // 2. Handle Update Function
     const handleUpdate = async () => {
         setLoading(true);
@@ -297,7 +266,7 @@ export default function ManagerSettingsScreen() {
             formData.append("address", shopData?.address);
             formData.append("contactNumber", shopData?.contactNumber);
             formData.append("operatingHours", shopData?.operatingHours);
-            formData.append("is_active", String(shopData?.isActive));
+            formData.append("isActive", String(shopData?.isActive));
 
             const response = await axiosInstance.post(`/manager-settings`, formData, {
                 headers: {
@@ -365,6 +334,41 @@ export default function ManagerSettingsScreen() {
         );
     };
 
+    useEffect(() => {
+        const getUserData = async () => {
+            try {
+                const userId = await AsyncStorage.getItem("userId");
+                if (userId) {
+                    const response = await axiosInstance.get(`/profile/${userId}`);
+                    setFullname(response.data.fullname);
+                    setEmail(response.data.email);
+                }
+            } catch (err) {
+                console.error("Error fetching profile:", err);
+            }
+        };
+        getUserData();
+
+        const getPrintShopData = async () => {
+            try {
+                const userId = await AsyncStorage.getItem("userId");
+                if (userId) {
+                    const response = await axiosInstance.get(`/my-shops/${userId}`);
+
+                    setShopData({ ...shopData, name: response.data.name })
+                    setShopData({ ...shopData, address: response.data.address })
+                    setShopData({ ...shopData, contactNumber: response.data.contactNumber })
+                    setShopData({ ...shopData, operatingHours: response.data.operatingHours })
+                    setShopData({ ...shopData, isActive: response.data.isActive })
+
+                }
+            } catch (err) {
+                console.error("Error fetching print shop data:", err);
+            }
+        };
+        getPrintShopData();
+    }, []);
+
     return (
         <ManagerLayout
             currentRoute="settings"
@@ -394,28 +398,28 @@ export default function ManagerSettingsScreen() {
                     <View style={{ marginBottom: 10 }}>
                         <Text style={style.smallLabel}>Shop Name</Text>
                         <Text style={[style.detailValue, { fontSize: 16, marginTop: 4 }]}>
-                            {email}
+                            {shopData.name}
                         </Text>
                     </View>
 
                     <View style={{ marginBottom: 10 }}>
                         <Text style={style.smallLabel}>Location / Address</Text>
                         <Text style={[style.detailValue, { fontSize: 16, marginTop: 4 }]}>
-                            {email}
+                            {shopData.address}
                         </Text>
                     </View>
 
                     <View style={{ marginBottom: 10 }}>
                         <Text style={style.smallLabel}>Contact Number</Text>
                         <Text style={[style.detailValue, { fontSize: 16, marginTop: 4 }]}>
-                            {email}
+                            {shopData.contactNumber}
                         </Text>
                     </View>
 
                     <View style={{ marginBottom: 10 }}>
                         <Text style={style.smallLabel}>Operating Hours</Text>
                         <Text style={[style.detailValue, { fontSize: 16, marginTop: 4 }]}>
-                            {email}
+                            {shopData.name}
                         </Text>
                     </View>
                 </View>
