@@ -1,8 +1,7 @@
 import { DropdownItem, RenderDropdown } from "@/components/dropdown";
+import { supabase } from "@/lib/supabase";
 import { styles } from "@/styles/studentStyles";
-import axiosInstance from "@/utils/axiosInstance";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from "expo-document-picker";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -20,37 +19,12 @@ import {
 } from "react-native";
 
 interface Shop {
-    id: string;
+    id: number;
     print_shop_id: number;
     name: string;
     address: string;
     is_active: boolean;
 }
-
-// REMEMBER: THIS IS JUST A TEST OR PLACEHOLDER FOR DISPLAY ONLY USE THE DATABASE AND DELETE THIS CODE
-const shops: Shop[] = [
-    {
-        id: "1",
-        print_shop_id: 5,
-        name: "QuickPrint Express",
-        address: "san miguel",
-        is_active: true,
-    },
-    {
-        id: "2",
-        print_shop_id: 5,
-        name: "Campus Copy Center",
-        address: "san miguel",
-        is_active: true,
-    },
-    {
-        id: "3",
-        print_shop_id: 5,
-        name: "Student Print Hub",
-        address: "san miguel",
-        is_active: true,
-    },
-];
 
 // REMEMBER: THIS IS JUST A TEST OR PLACEHOLDER FOR DISPLAY ONLY USE THE DATABASE AND DELETE THIS CODE
 const paperData: DropdownItem[] = [
@@ -69,7 +43,6 @@ const colorData: DropdownItem[] = [
 
 export default function SubmitJobScreen() {
     const [visible, setVisible] = useState(false);
-    // TODO: FINISH THIS CODE IN THE DISPLAY PRINTSHOP DROPDOWN SELECTION
     const [selectedPrintShop, setSelectedPrintShop] = useState<Shop | null>(null);
 
     const [file, setFile] = useState<any>(null);
@@ -82,22 +55,20 @@ export default function SubmitJobScreen() {
     const [orientation, setOrientation] = useState("portrait");
     const [binding, setBinding] = useState("none");
 
-    // TODO: FINISH THIS CODE IN THE DISPLAY PRINTSHOP DROPDOWN SELECTION
-    const [printShops, setPrintShops] = useState<Shop[]>();
+    const [printShops, setPrintShops] = useState<Shop[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // TODO: FINISH THIS CODE IN THE DISPLAY PRINTSHOP DROPDOWN SELECTION
+    // Fetch Print Shops from Supabase
     useEffect(() => {
         const getPrintShops = async () => {
             try {
-                const response = await axiosInstance.get(`/print-shops`);
+                const { data, error } = await supabase
+                    .from('print_shops')
+                    .select('*')
+                    .eq('is_active', true); // Only show active shops
 
-                // Add a safety check to ensure response.data is an array
-                if (response.data && Array.isArray(response.data)) {
-                    setPrintShops(response.data);
-                } else {
-                    setPrintShops([]);
-                }
+                if (error) throw error;
+                setPrintShops(data || []);
             } catch (error) {
                 console.error("Error fetching shops:", error);
                 setPrintShops([]);
@@ -131,56 +102,67 @@ export default function SubmitJobScreen() {
         }
 
         try {
-            const userId = await AsyncStorage.getItem("userId");
-            const formData = new FormData();
+            // 1. Get current Auth User
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("No user found");
 
-            // --- UNIVERSAL FILE ATTACHMENT ---
-            if (Platform.OS === "web") {
-                // On Web, expo-document-picker returns a 'file' object (Blob)
-                // inside the assets array. We must use that directly.
+            // 2. Upload file to Supabase Storage
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+            const filePath = `print_jobs/${fileName}`;
+
+            let fileBody;
+            if (Platform.OS === 'web') {
                 const response = await fetch(file.uri);
-                const blob = await response.blob();
-                formData.append("file", blob, file.name);
+                fileBody = await response.blob();
             } else {
-                // On Android
-                formData.append("file", {
-                    uri: file.uri,
-                    name: file.name || `upload-${Date.now()}`,
-                    type: file.mimeType || "application/pdf",
-                } as any);
+                // For mobile, you might need to convert to base64 or use a FileSystem helper
+                const response = await fetch(file.uri);
+                fileBody = await response.blob();
             }
 
-            // --- APPEND REMAINING DATA ---
-            formData.append("userId", userId || "1");
-            formData.append("printShopId", selectedPrintShop.id);
-            formData.append("pages", pages);
-            formData.append("copies", copies);
-            formData.append("notes", notes);
-            formData.append("paperSize", paperSize);
-            formData.append("colorMode", colorMode);
-            formData.append("orientation", orientation);
-            formData.append("binding", binding);
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('documents') // Ensure you created a 'documents' bucket in Supabase
+                .upload(filePath, fileBody);
 
-            const response = await axiosInstance.post(`/submit-job`, formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+            if (uploadError) throw uploadError;
+
+            // 3. Get Public URL for the file
+            const { data: { publicUrl } } = supabase.storage
+                .from('documents')
+                .getPublicUrl(filePath);
+
+            // 4. Insert Job Record into 'print_jobs'
+            const { error: insertError } = await supabase
+                .from('print_jobs')
+                .insert([{
+                    user_id: user.id,
+                    print_shop_id: selectedPrintShop.id,
+                    file_name: file.name,
+                    file_url: publicUrl,
+                    file_type: file.mimeType || fileExt,
+                    pages: parseInt(pages),
+                    copies: parseInt(copies),
+                    paper_size: paperSize,
+                    color_mode: colorMode,
+                    orientation: orientation,
+                    binding: binding,
+                    notes: notes,
+                    status: 'pending',
+                    payment_stat: 'unpaid'
+                }]);
+
+            if (insertError) throw insertError;
 
             Alert.alert("Success", "Job submitted successfully!");
             router.push("/(tabs)/student/orders");
         } catch (error: any) {
-            console.error("Submission Error:", error.response?.data || error.message);
-            Alert.alert(
-                "Error",
-                error.response?.data?.message || "Failed to submit job",
-            );
+            console.error("Submission Error:", error.message);
+            Alert.alert("Error", error.message || "Failed to submit job");
         }
     };
 
-    // Helper to ensure only digits are entered
     const handleNumberChange = (text: string, setter: (val: string) => void) => {
-        // Remove anything that isn't a digit
         const cleaned = text.replace(/[^0-9]/g, "");
         setter(cleaned);
     };
@@ -239,7 +221,7 @@ export default function SubmitJobScreen() {
                                 {/* TODO: FIX THIS DATA PROPERTY PRINTSHOPS ERROR ASK IN GOOGLE OR AI */}
                                 <FlatList
                                     data={printShops}
-                                    keyExtractor={(item) => item.id}
+                                    keyExtractor={(item) => item.id.toString()}
                                     // if the printshop table is empty
                                     ListEmptyComponent={
                                         <Text style={{ textAlign: "center", padding: 20 }}>

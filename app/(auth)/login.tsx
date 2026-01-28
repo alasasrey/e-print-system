@@ -8,52 +8,6 @@ import { styles } from "../../styles/authStyles";
 
 
 export default function LoginScreen() {
-    // OLD CODE
-    // const [email, setEmail] = useState("");
-    // const [password, setPassword] = useState("");
-
-    // const handleLogin = async () => {
-    //     try {
-    //         //change the localhost in the api.js, app.json or .env
-    //         const response = await axiosInstance.post(`/login`, {
-    //             email,
-    //             password,
-    //         });
-
-    //         const { token, role, user } = response.data;
-
-    //         //SAVE AUTH DATA
-    //         await AsyncStorage.multiSet([
-    //             ["token", token],
-    //             ["role", role],
-    //             ["userId", String(user.id)],
-    //         ]);
-
-    //         //ROLE-BASED ROUTING
-    //         if (role === "admin") {
-    //             router.replace("/(tabs)/admin/dashboard");
-    //         } else if (role === "manager") {
-    //             router.replace("/(tabs)/manager/dashboard");
-    //         } else {
-    //             router.replace("/(tabs)/student/home");
-    //         }
-
-    //         Alert.alert("Success", "Login successful");
-    //     } catch (error) {
-    //         let message = "Unable to connect to server";
-
-    //         if (error instanceof Error) {
-    //             // Standard JS error
-    //             message = error.message;
-    //         } else if (error && typeof error === 'object' && 'response' in error && (error as any).response?.data?.message) {
-    //             // Check if the error is an Axios error (or at least has a response object)
-    //             message = (error as any).response.data.message;
-    //         }
-
-    //         Alert.alert("Login Failed", message);
-    //     }
-    // };
-
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -73,22 +27,25 @@ export default function LoginScreen() {
                 password: password,
             });
 
+            // If this fails, the email/password is wrong OR email isn't confirmed
             if (error) throw error;
 
             const authUser = data.user;
+            if (!authUser) throw new Error("No user data returned");
 
-            // 2. FETCH PROFILE DATA from your custom 'users' table
-            // We fetch the 'role', 'student_id', and 'fullname' using the auth id
+            // 2. FETCH PROFILE DATA from e_print_users
             const { data: userProfile, error: profileError } = await supabase
-                .from('users') // Updated to your table name
+                .from('e_print_users') // matches your screenshot
                 .select('role, student_id, fullname')
-                .eq('id', authUser.id) // This matches the UUID from Supabase Auth
+                .eq('auth_user_id', authUser.id)
                 .single();
 
-            if (profileError) throw new Error("User profile not found");
+            if (profileError) {
+                console.error("Profile Fetch Error:", profileError);
+                throw new Error("Login success, but profile not found in e_print_users table.");
+            }
 
             // 3. SAVE TO ASYNC STORAGE
-            // We save the role and student_id so you can use them in other screens
             await AsyncStorage.multiSet([
                 ["role", userProfile.role],
                 ["userId", authUser.id],
@@ -108,7 +65,8 @@ export default function LoginScreen() {
 
             Alert.alert("Success", `Welcome back, ${userProfile.fullname}!`);
         } catch (error: any) {
-            Alert.alert("Login Failed", error.message || "An unknown error occurred");
+            // This will now show you if it's "Invalid Credentials" or "Email not confirmed"
+            Alert.alert("Login Failed", error.message);
         } finally {
             setLoading(false);
         }

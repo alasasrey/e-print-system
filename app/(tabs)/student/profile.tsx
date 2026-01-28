@@ -1,5 +1,5 @@
+import { supabase } from '@/lib/supabase'; // Adjust this path to your supabase client file
 import { styles } from "@/styles/studentStyles";
-import axiosInstance from "@/utils/axiosInstance";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
@@ -17,34 +17,30 @@ import {
 export default function ProfileScreen() {
     const [fullname, setFullname] = useState("");
     const [email, setEmail] = useState("");
+    const [loading, setLoading] = useState(true);
 
     const performLogout = async () => {
         try {
-            // Clear Storage
-            await AsyncStorage.clear();
-            console.log("Storage cleared");
+            // 1. Log out from Supabase (clears session & local storage automatically)
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
 
-            // Absolute path redirect
+            // 2. Clear any additional custom storage if necessary
+            await AsyncStorage.clear();
+
+            console.log("Logged out successfully");
             router.replace("/(auth)/login");
-        } catch (e) {
+        } catch (e: any) {
             console.error("Logout Error:", e);
-            if (Platform.OS !== "web") {
-                Alert.alert("Error", "Logout failed");
-            } else {
-                alert("Logout failed");
-            }
+            const message = e.message || "Logout failed";
+            Platform.OS === "web" ? alert(message) : Alert.alert("Error", message);
         }
     };
 
     const handleLogout = () => {
         if (Platform.OS === "web") {
-            // 2. Browser-native confirmation for Web
-            const confirmLogout = window.confirm("Are you sure you want to logout?");
-            if (confirmLogout) {
-                performLogout();
-            }
+            if (window.confirm("Are you sure you want to logout?")) performLogout();
         } else {
-            // 3. Mobile-native Alert for Android/iOS
             Alert.alert("Logout", "Are you sure?", [
                 { text: "Cancel", style: "cancel" },
                 { text: "Logout", style: "destructive", onPress: performLogout },
@@ -55,16 +51,34 @@ export default function ProfileScreen() {
     useEffect(() => {
         const getUserData = async () => {
             try {
-                const userId = await AsyncStorage.getItem("userId");
-                if (userId) {
-                    const response = await axiosInstance.get(`/profile/${userId}`);
-                    setFullname(response.data.fullname);
-                    setEmail(response.data.email);
+                setLoading(true);
+
+                // 1. Get the current authenticated user session
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+                if (authError || !user) throw authError;
+
+                // 2. Fetch profile details from your custom 'e_print_users' table
+                // We use .eq('id', user.id) assuming you linked them via UUID
+                const { data, error, status } = await supabase
+                    .from('e_print_users')
+                    .select('fullname, email')
+                    .eq('auth_user_id', user.id)
+                    .single();
+
+                if (error && status !== 406) throw error;
+
+                if (data) {
+                    setFullname(data.fullname);
+                    setEmail(data.email);
                 }
-            } catch (err) {
-                console.error("Error fetching profile:", err);
+            } catch (err: any) {
+                console.error("Error fetching profile:", err.message);
+            } finally {
+                setLoading(false);
             }
         };
+
         getUserData();
     }, []);
 
