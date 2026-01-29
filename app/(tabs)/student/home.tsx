@@ -1,25 +1,49 @@
+import { supabase } from "@/lib/supabase";
 import { styles } from "@/styles/studentStyles";
-import axiosInstance from "@/utils/axiosInstance";
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
+
+// TODO: CHANGE THIS CODE TO THE SUPABASE CODE!!!!!
+
 export default function HomeScreen() {
     const [fullname, setFullname] = useState('');
+    const [loading, setLoading] = useState(false);
 
     //REMEMBER: USE useEffect(()=>{}, []); FOR GET AND POST REQUEST AND TO MAKE SURE IT RUNS ONCE ONLY 
     useEffect(() => {
-        const getFullname = async () => {
-            const userId = await AsyncStorage.getItem('userId');
+        const getUserData = async () => {
+            try {
+                setLoading(true);
 
-            const response = await axiosInstance.get(`/home/${userId}`);
-            setFullname(response.data.fullname);
+                // 1. Get the current authenticated user session
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-        }
+                if (authError || !user) throw authError;
 
-        getFullname();
+                // 2. Fetch profile details from your custom 'e_print_users' table
+                // We use .eq('id', user.id) assuming you linked them via UUID
+                const { data, error, status } = await supabase
+                    .from('e_print_users')
+                    .select('fullname')
+                    .eq('auth_user_id', user.id)
+                    .single();
+
+                if (error && status !== 406) throw error;
+
+                if (data) {
+                    setFullname(data.fullname);
+                }
+            } catch (err: any) {
+                console.error("Error fetching user fullname:", err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        getUserData();
     }, []);
 
     return (

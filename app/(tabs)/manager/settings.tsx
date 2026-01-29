@@ -1,8 +1,8 @@
 import { ManagerLayout } from "@/components/ManagerLayout";
+import TimePicker from "@/components/timePicker";
+import { supabase } from "@/lib/supabase"; // Import your Supabase client
 import { styles as style } from "@/styles/studentStyles";
-import axiosInstance from "@/utils/axiosInstance";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router"; // Added router for redirection
+import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
     Alert,
@@ -17,144 +17,126 @@ import {
     View,
 } from "react-native";
 
-//TODO: PLEASE FIX THIS CODE!!!
+const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export default function ManagerSettingsScreen() {
     const { width } = useWindowDimensions();
     const isMobile = width < 768;
 
-    // 1. Setup State for all fields
     const [shopData, setShopData] = useState({
-        // THIS CODE IS JUST A DEFAULT OR PLACEHOLDER
         name: "",
         address: "",
-        contactNumber: "",
-        operatingHours: "Mon-Fri: 8:00 AM - 6:00 PM",
-        isActive: true,
+        contact_number: "",
+        open_time: new Date(new Date().setHours(8, 0, 0)),
+        close_time: new Date(new Date().setHours(18, 0, 0)),
+        operating_days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], // New State
+        is_active: true,
     });
 
     const [loading, setLoading] = useState(false);
-
     const [fullname, setFullname] = useState("");
     const [email, setEmail] = useState("");
 
-    // 2. Handle Update Function
+    // UI State for showing pickers
+    const [showOpenPicker, setShowOpenPicker] = useState(false);
+    const [showClosePicker, setShowClosePicker] = useState(false);
+
+    useEffect(() => {
+        const loadInitialData = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) { router.replace("/(auth)/login"); return; }
+
+                //  GETTING THE MANAGER PROFILE
+                const { data, error, status } = await supabase
+                    .from('e_print_users')
+                    .select('fullname, email')
+                    .eq('auth_user_id', user.id)
+                    .single();
+
+
+                if (error && status !== 406) throw error;
+
+                if (data) {
+                    setFullname(data.fullname);
+                    setEmail(data.email);
+                }
+
+                // GETTING THE SHOP INFORMATION
+                const { data: shop } = await supabase
+                    .from('print_shops')
+                    .select('name, address, contact_number, open_time, close_time, operating_days, is_active')
+                    .eq('user_id', user.id)
+                    .maybeSingle();
+
+                if (shop) {
+                    setShopData({
+                        name: shop.name || "",
+                        address: shop.address || "",
+                        contact_number: shop.contact_number || "",
+                        open_time: shop.open_time ? new Date(`1970-01-01T${shop.open_time}`) : new Date(new Date().setHours(8, 0)),
+                        close_time: shop.close_time ? new Date(`1970-01-01T${shop.close_time}`) : new Date(new Date().setHours(18, 0)),
+                        operating_days: shop.operating_days || ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                        is_active: shop.is_active ?? true,
+                    });
+                }
+            } catch (err) { console.error(err); }
+        };
+        loadInitialData();
+    }, []);
+
+    const toggleDay = (day: string) => {
+        setShopData(prev => {
+            const days = prev.operating_days.includes(day)
+                ? prev.operating_days.filter(d => d !== day)
+                : [...prev.operating_days, day];
+            return { ...prev, operating_days: days };
+        });
+    };
+
     const handleUpdate = async () => {
         setLoading(true);
         try {
-            // This is where you would call your API (e.g., Supabase or Firebase)
-            // await api.updateShopProfile(shopData);
+            const { data: { user } } = await supabase.auth.getUser();
+            const openString = shopData.open_time.toLocaleTimeString('en-GB', { hour12: false });
+            const closeString = shopData.close_time.toLocaleTimeString('en-GB', { hour12: false });
 
-            const userId = await AsyncStorage.getItem("userId");
-            const formData = new FormData();
+            const { error } = await supabase
+                .from('print_shops')
+                .upsert({
+                    user_id: user?.id,
+                    name: shopData.name,
+                    address: shopData.address,
+                    contact_number: shopData.contact_number,
+                    open_time: openString,
+                    close_time: closeString,
+                    operating_days: shopData.operating_days, // Save the array
+                    is_active: shopData.is_active,
+                }, { onConflict: 'user_id' });
 
-            formData.append("userId", userId || "1");
-            formData.append("name", shopData?.name);
-            formData.append("address", shopData?.address);
-            formData.append("contactNumber", shopData?.contactNumber);
-            formData.append("operatingHours", shopData?.operatingHours);
-            formData.append("isActive", String(shopData?.isActive));
+            if (error) throw error;
+            Alert.alert("Success", "Shop profile updated!");
+        } catch (error: any) {
+            Alert.alert("Error", error.message);
+        } finally { setLoading(false); }
+    };
 
-            const response = await axiosInstance.post(`/manager-settings`, formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+    const onTimeChange = (event: any, selectedDate?: Date, field?: 'open' | 'close') => {
+        // Always hide pickers after selection (except iOS which uses a spinner)
+        if (Platform.OS !== 'ios') {
+            setShowOpenPicker(false);
+            setShowClosePicker(false);
+        }
 
-            console.log("Updating Shop with:", formData);
-
-            // Mock delay DELETE THIS IF UNNECCESARY
-            // await new Promise((resolve) => setTimeout(resolve, 1000));
-
-            Alert.alert("Success", "Shop profile updated successfully!");
-        } catch (error) {
-            Alert.alert("Error", "Failed to update profile.");
-        } finally {
-            setLoading(false);
+        if (selectedDate) {
+            if (field === 'open') setShopData({ ...shopData, open_time: selectedDate });
+            else setShopData({ ...shopData, close_time: selectedDate });
         }
     };
 
-    // UPDATED FUNCTION: Deletes Shop + Deletes User Account + Clears Session
-    const handleDeleteShop = async () => {
-        Alert.alert(
-            "Confirm Full Deletion",
-            "This will permanently delete your Print Shop AND your Manager Account. This action cannot be undone.",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete Everything",
-                    style: "destructive",
-                    onPress: async () => {
-                        setLoading(true);
-                        try {
-                            const userId = await AsyncStorage.getItem("userId");
-
-                            if (!userId) {
-                                Alert.alert("Error", "User session not found.");
-                                return;
-                            }
-
-                            // 1. Delete the Print Shop
-                            await axiosInstance.delete(`/manager/delete-shop/${userId}`);
-
-                            // 2. NEW: Delete the User Account
-                            // Assuming your backend has an endpoint to delete the user by ID
-                            await axiosInstance.delete(`/manager/delete/print-shop-account/${userId}`);
-
-                            // 3. Clear all local storage (Auth Session)
-                            await AsyncStorage.multiRemove(["userId", "userRole", "userToken"]);
-
-                            Alert.alert("Account Deleted", "Your shop and account have been permanently removed.");
-
-                            // 4. Redirect to the Login screen
-                            router.replace("/(auth)/login");
-
-                        } catch (error) {
-                            console.error("Deletion error:", error);
-                            Alert.alert("Error", "Could not complete full deletion. Please try again.");
-                        } finally {
-                            setLoading(false);
-                        }
-                    },
-                },
-            ],
-        );
+    const formatDisplayTime = (date: Date) => {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
-
-    useEffect(() => {
-        const getUserData = async () => {
-            try {
-                const userId = await AsyncStorage.getItem("userId");
-                if (userId) {
-                    const response = await axiosInstance.get(`/profile/${userId}`);
-                    setFullname(response.data.fullname);
-                    setEmail(response.data.email);
-                }
-            } catch (err) {
-                console.error("Error fetching profile:", err);
-            }
-        };
-        getUserData();
-
-        const getPrintShopData = async () => {
-            try {
-                const userId = await AsyncStorage.getItem("userId");
-                if (userId) {
-                    const response = await axiosInstance.get(`/my-shops/${userId}`);
-
-                    setShopData({ ...shopData, name: response.data.name })
-                    setShopData({ ...shopData, address: response.data.address })
-                    setShopData({ ...shopData, contactNumber: response.data.contactNumber })
-                    setShopData({ ...shopData, operatingHours: response.data.operatingHours })
-                    setShopData({ ...shopData, isActive: response.data.isActive })
-
-                }
-            } catch (err) {
-                console.error("Error fetching print shop data:", err);
-            }
-        };
-        getPrintShopData();
-    }, []);
 
     return (
         <ManagerLayout
@@ -181,40 +163,11 @@ export default function ManagerSettingsScreen() {
                             {email}
                         </Text>
                     </View>
-
-                    <View style={{ marginBottom: 10 }}>
-                        <Text style={style.smallLabel}>Shop Name</Text>
-                        <Text style={[style.detailValue, { fontSize: 16, marginTop: 4 }]}>
-                            {shopData.name}
-                        </Text>
-                    </View>
-
-                    <View style={{ marginBottom: 10 }}>
-                        <Text style={style.smallLabel}>Location / Address</Text>
-                        <Text style={[style.detailValue, { fontSize: 16, marginTop: 4 }]}>
-                            {shopData.address}
-                        </Text>
-                    </View>
-
-                    <View style={{ marginBottom: 10 }}>
-                        <Text style={style.smallLabel}>Contact Number</Text>
-                        <Text style={[style.detailValue, { fontSize: 16, marginTop: 4 }]}>
-                            {shopData.contactNumber}
-                        </Text>
-                    </View>
-
-                    <View style={{ marginBottom: 10 }}>
-                        <Text style={style.smallLabel}>Operating Hours</Text>
-                        <Text style={[style.detailValue, { fontSize: 16, marginTop: 4 }]}>
-                            {shopData.name}
-                        </Text>
-                    </View>
                 </View>
 
 
                 {/* SHOP SETTINGS AREA  */}
                 <View style={{ flexDirection: isMobile ? "column" : "row", gap: 20 }}>
-                    {/* SHOP INFORMATION SECTION */}
                     <View style={[styles.card, { flex: isMobile ? 0 : 2 }]}>
                         <Text style={styles.sectionTitle}>Shop Information</Text>
 
@@ -223,9 +176,7 @@ export default function ManagerSettingsScreen() {
                             <TextInput
                                 style={styles.input}
                                 value={shopData.name}
-                                onChangeText={(text) =>
-                                    setShopData({ ...shopData, name: text })
-                                }
+                                onChangeText={(text) => setShopData({ ...shopData, name: text })}
                                 placeholder="Your Shop Name"
                             />
                         </View>
@@ -235,9 +186,7 @@ export default function ManagerSettingsScreen() {
                             <TextInput
                                 style={styles.input}
                                 value={shopData.address}
-                                onChangeText={(text) =>
-                                    setShopData({ ...shopData, address: text })
-                                }
+                                onChangeText={(text) => setShopData({ ...shopData, address: text })}
                                 placeholder="Your Address"
                             />
                         </View>
@@ -246,24 +195,10 @@ export default function ManagerSettingsScreen() {
                             <Text style={styles.label}>Contact Number</Text>
                             <TextInput
                                 style={styles.input}
-                                value={shopData.contactNumber}
-                                onChangeText={(text) =>
-                                    setShopData({ ...shopData, contactNumber: text })
-                                }
+                                value={shopData.contact_number}
+                                onChangeText={(text) => setShopData({ ...shopData, contact_number: text })}
                                 keyboardType="phone-pad"
                                 placeholder="Your Contact Number"
-                            />
-                        </View>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Operating Hours</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={shopData.operatingHours}
-                                onChangeText={(text) =>
-                                    setShopData({ ...shopData, operatingHours: text })
-                                }
-                                placeholder="For example: Mon-Fri: 8:00 AM - 6:00 PM"
                             />
                         </View>
 
@@ -278,63 +213,143 @@ export default function ManagerSettingsScreen() {
                         </TouchableOpacity>
                     </View>
 
-                    {/* SHOP STATUS & PREFERENCES */}
-                    <View style={[styles.card, { flex: isMobile ? 0 : 1 }]}>
-                        <Text style={styles.sectionTitle}>Preferences</Text>
+                    <View style={[styles.card, { marginTop: 20, borderTopWidth: 0, elevation: 0 }]}>
+                        <Text style={styles.sectionTitle}>Operating Schedule</Text>
 
-                        <View style={styles.settingRow}>
-                            <View>
-                                <Text style={styles.settingLabel}>Shop Status</Text>
-                                <Text style={styles.settingSub}>Set your shop as active</Text>
-                            </View>
-                            <Switch
-                                value={shopData.isActive}
-                                onValueChange={(val) =>
-                                    setShopData({ ...shopData, isActive: val })
-                                }
-                                trackColor={{ false: "#767577", true: "#0A0A1B" }}
-                            />
+                        {/* DAYS SELECTOR */}
+                        <Text style={styles.label}>Select Operating Days</Text>
+                        <View style={styles.daysContainer}>
+                            {DAYS_OF_WEEK.map((day) => {
+                                const isSelected = shopData.operating_days.includes(day);
+                                return (
+                                    <TouchableOpacity
+                                        key={day}
+                                        style={[styles.dayChip, isSelected && styles.dayChipActive]}
+                                        onPress={() => toggleDay(day)}
+                                    >
+                                        <Text style={[styles.dayText, isSelected && styles.dayTextActive]}>
+                                            {day.substring(0, 3)}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
                         </View>
 
-                        <View
-                            style={[
-                                styles.statusIndicator,
-                                { backgroundColor: shopData.isActive ? "#E8F9F1" : "#FEEBEB" },
-                            ]}
-                        >
-                            <Text
-                                style={{
-                                    color: shopData.isActive ? "#10B981" : "#FF5252",
-                                    fontWeight: "bold",
-                                    fontSize: 12,
+                        {/* TIME PICKERS */}
+                        <Text style={styles.label}>Operating Hours</Text>
+                        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 15 }}>
+                            <TouchableOpacity
+                                style={[styles.timePickerButton, { flex: 1 }]}
+                                onPress={() => {
+                                    setShowOpenPicker(!showOpenPicker);
+                                    setShowClosePicker(false);
                                 }}
                             >
-                                {shopData.isActive
-                                    ? "● SHOP IS CURRENTLY ACTIVE"
-                                    : "○ SHOP IS CURRENTLY OFFLINE"}
-                            </Text>
-                        </View>
+                                <Text style={styles.label}>Open: {formatDisplayTime(shopData.open_time)}</Text>
+                            </TouchableOpacity>
 
-                        {/* Danger Zone */}
-                        <View style={styles.dangerZone}>
-                            <Text style={[styles.label, { color: "#FF5252" }]}>
-                                Danger Zone
-                            </Text>
                             <TouchableOpacity
-                                style={styles.dangerButton}
-                                onPress={handleDeleteShop}
+                                style={[styles.timePickerButton, { flex: 1 }]}
+                                onPress={() => {
+                                    setShowClosePicker(!showClosePicker);
+                                    setShowOpenPicker(false);
+                                }}
                             >
-                                <Text style={styles.dangerButtonText}>Delete Shop Account</Text>
+                                <Text style={styles.label}>Close: {formatDisplayTime(shopData.close_time)}</Text>
                             </TouchableOpacity>
                         </View>
+
+                        {/* ACTUAL PICKER UI RENDERING */}
+                        {showOpenPicker && (
+                            <View style={styles.pickerWrapper}>
+                                <Text style={styles.label}>Set Opening Time</Text>
+                                <TimePicker
+                                    value={shopData.open_time}
+                                    onChange={(e: any, d: any) => onTimeChange(e, d, 'open')}
+                                />
+                            </View>
+                        )}
+
+                        {showClosePicker && (
+                            <View style={styles.pickerWrapper}>
+                                <Text style={styles.label}>Set Closing Time</Text>
+                                <TimePicker
+                                    value={shopData.close_time}
+                                    onChange={(e: any, d: any) => onTimeChange(e, d, 'close')}
+                                />
+                            </View>
+                        )}
+
+                        <TouchableOpacity
+                            style={[styles.saveButton, { marginTop: 20 }]}
+                            onPress={handleUpdate}
+                            disabled={loading}
+                        >
+                            <Text style={styles.saveButtonText}>
+                                {loading ? "Saving..." : "Save Shop Profile"}
+                            </Text>
+                        </TouchableOpacity>
                     </View>
+                    {/* ======================================================== */}
+                </View>
+
+
+
+
+
+
+                <View style={[styles.card, { flex: isMobile ? 0 : 1 }]}>
+                    <Text style={styles.sectionTitle}>Preferences</Text>
+
+                    <View style={styles.settingRow}>
+                        <View>
+                            <Text style={styles.settingLabel}>Shop Status</Text>
+                            <Text style={styles.settingSub}>Set your shop as active</Text>
+                        </View>
+                        <Switch
+                            value={shopData.is_active}
+                            onValueChange={(val) => setShopData({ ...shopData, is_active: val })}
+                            trackColor={{ false: "#767577", true: "#0A0A1B" }}
+                        />
+                    </View>
+
+                    <View
+                        style={[
+                            styles.statusIndicator,
+                            { backgroundColor: shopData.is_active ? "#E8F9F1" : "#FEEBEB" },
+                        ]}
+                    >
+                        <Text
+                            style={{
+                                color: shopData.is_active ? "#10B981" : "#FF5252",
+                                fontWeight: "bold",
+                                fontSize: 12,
+                            }}
+                        >
+                            {shopData.is_active
+                                ? "● SHOP IS CURRENTLY ACTIVE"
+                                : "○ SHOP IS CURRENTLY OFFLINE"}
+                        </Text>
+                    </View>
+
+                    {/* MAYBE IN THE FUTURE I WILL ADD THE DELETE SHOP OR USER BUT NOT RIGHT NOW */}
+                    {/* <View style={styles.dangerZone}>
+                        <Text style={[styles.label, { color: "#FF5252" }]}>
+                            Danger Zone
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.dangerButton}
+                            onPress={handleDeleteShop}
+                        >
+                            <Text style={styles.dangerButtonText}>Delete Shop Account</Text>
+                        </TouchableOpacity>
+                    </View> */}
                 </View>
             </ScrollView>
-        </ManagerLayout>
+        </ManagerLayout >
     );
 }
 
-// ... your styles remain largely the same, but added a dangerZone wrapper
 const styles = StyleSheet.create({
     card: {
         backgroundColor: "#FFF",
@@ -392,4 +407,51 @@ const styles = StyleSheet.create({
         borderTopColor: "#EEE",
         paddingTop: 20,
     },
+
+    timeRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+    timePickerButton: {
+        height: 45,
+        borderWidth: 1,
+        borderColor: "#EEE",
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: "#FAFAFA"
+    },
+
+    daysContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginBottom: 15,
+    },
+    dayChip: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: "#DDD",
+        backgroundColor: "#FFF",
+    },
+    dayChipActive: {
+        backgroundColor: "#0A0A1B",
+        borderColor: "#0A0A1B",
+    },
+    dayText: {
+        fontSize: 12,
+        color: "#666",
+        fontWeight: "600",
+    },
+    dayTextActive: {
+        color: "#FFF",
+    },
+
+    pickerWrapper: {
+        backgroundColor: '#F9F9F9',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#EEE'
+    }
 });

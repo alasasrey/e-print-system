@@ -40,6 +40,8 @@ const colorData: DropdownItem[] = [
 ];
 
 //PLEASE FINISH THIS CODE!!!
+// TODO: CHANGE THIS CODE TO THE SUPABASE CODE!!!!!
+
 
 export default function SubmitJobScreen() {
     const [visible, setVisible] = useState(false);
