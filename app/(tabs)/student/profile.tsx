@@ -63,7 +63,7 @@ export default function ProfileScreen() {
                 const { data, error, status } = await supabase
                     .from('e_print_users')
                     .select('fullname, email')
-                    .eq('auth_user_id', user.id)
+                    .eq('supabase_user_id', user.id)
                     .single();
 
                 if (error && status !== 406) throw error;

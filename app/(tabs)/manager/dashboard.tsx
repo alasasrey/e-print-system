@@ -1,5 +1,6 @@
 import { ManagerLayout } from "@/components/ManagerLayout";
 import { StatCard } from "@/components/statCard";
+import { supabase } from "@/lib/supabase"; // Import your Supabase client
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
@@ -13,77 +14,9 @@ import {
     View
 } from "react-native";
 
-import { supabase } from "@/lib/supabase"; // Import your Supabase client
-
-
 // TODO: CHANGE THIS CODE TO THE SUPABASE CODE!!!!!
 
-
 export default function ManagerDashboardScreen() {
-    // const { width } = useWindowDimensions();
-    // const isMobile = width < 768;
-
-    // // State Management
-    // const [loading, setLoading] = useState(true);
-    // const [noShop, setNoShop] = useState(false);
-    // const [stats, setStats] = useState({
-    //     pending: 0,
-    //     processing: 0,
-    //     ready: 0,
-    //     approved: 0,
-    //     dailyRevenue: 0,
-    //     totalRevenue: 0,
-    // });
-
-    // const getUserData = useCallback(async () => {
-    //     try {
-    //         setLoading(true);
-    //         const userId = await AsyncStorage.getItem("userId");
-
-    //         if (!userId) {
-    //             router.replace("/login"); // Redirect if no session
-    //             return;
-    //         }
-
-    //         const response = await axiosInstance.get(`/manager-dashboard/${userId}`);
-
-    //         if (response.data.noShop) {
-    //             setNoShop(true);
-    //         } else {
-    //             setStats({
-    //                 pending: response.data?.pending || 0,
-    //                 processing: response.data?.processing || 0,
-    //                 ready: response.data?.ready || 0,
-    //                 approved: response.data?.approved || 0,
-    //                 dailyRevenue: response.data?.dailyRevenue || 0,
-    //                 totalRevenue: response.data?.totalRevenue || 0,
-    //             });
-    //             setNoShop(false);
-    //         }
-    //     } catch (err) {
-    //         console.error("Error fetching manager dashboard data:", err);
-    //         // Handle error (e.g., show a toast or alert)
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // }, []);
-
-    // useEffect(() => {
-    //     getUserData();
-    // }, [getUserData]);
-
-    // if (loading) {
-    //     return (
-    //         <ManagerLayout currentRoute="dashboard" title="Loading...">
-    //             <View style={styles.centered}>
-    //                 <ActivityIndicator size="large" color="#0A0A1B" />
-    //             </View>
-    //         </ManagerLayout>
-    //     );
-    // }
-
-
-
     const { width } = useWindowDimensions();
     const isMobile = width < 768;
 
@@ -133,22 +66,30 @@ export default function ManagerDashboardScreen() {
                 .from('manager_dashboard')
                 .select('*')
                 .eq('user_id', user.id)
-                .single();
+                .maybeSingle(); // Use maybeSingle instead of single
 
             if (dbError) {
                 // If dashboard row doesn't exist yet, we just show zeros
                 console.warn("No dashboard stats found for this user.");
-            } else {
-                setStats({
-                    pending: dashboardData.pending || 0,
-                    processing: dashboardData.processing || 0,
-                    ready: dashboardData.ready || 0,
-                    approved: dashboardData.approved || 0,
-                    dailyRevenue: dashboardData.daily_revenue || 0, // Match screenshot: daily_revenue
-                    totalRevenue: dashboardData.total_revenue || 0, // Match screenshot: total_revenue
-                });
-                setNoShop(false);
             }
+
+            // ADDED GUARD: Only update state if dashboardData is NOT null
+            if (dashboardData) {
+                setStats({
+                    pending: dashboardData.pending ?? 0,
+                    processing: dashboardData.processing ?? 0,
+                    ready: dashboardData.ready ?? 0,
+                    approved: dashboardData.approved ?? 0,
+                    dailyRevenue: dashboardData.daily_revenue ?? 0,
+                    totalRevenue: dashboardData.total_revenue ?? 0,
+                });
+            } else {
+                // If null, stats remain at their initial state (all 0s)
+                console.warn("Dashboard data is null, using default zeros.");
+            }
+
+            setNoShop(false);
+
         } catch (err) {
             console.error("Error fetching manager dashboard data:", err);
         } finally {

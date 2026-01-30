@@ -51,7 +51,7 @@ export default function ManagerSettingsScreen() {
                 const { data, error, status } = await supabase
                     .from('e_print_users')
                     .select('fullname, email')
-                    .eq('auth_user_id', user.id)
+                    .eq('supabase_user_id', user.id)
                     .single();
 
 
@@ -98,8 +98,21 @@ export default function ManagerSettingsScreen() {
         setLoading(true);
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            const openString = shopData.open_time.toLocaleTimeString('en-GB', { hour12: false });
-            const closeString = shopData.close_time.toLocaleTimeString('en-GB', { hour12: false });
+            if (!user) {
+                Alert.alert("Error", "You must be logged in to update settings.");
+                return;
+            }
+
+            // Helper to ensure strict HH:mm:ss format
+            const toSqlTime = (date: Date) => {
+                return date.toTimeString().split(' ')[0]; // Returns "HH:mm:ss"
+            };
+
+            const openString = toSqlTime(shopData.open_time);
+            const closeString = toSqlTime(shopData.close_time);
+
+            // const openString = shopData.open_time.toLocaleTimeString('en-GB', { hour12: false });
+            // const closeString = shopData.close_time.toLocaleTimeString('en-GB', { hour12: false });
 
             const { error } = await supabase
                 .from('print_shops')
@@ -115,8 +128,25 @@ export default function ManagerSettingsScreen() {
                 }, { onConflict: 'user_id' });
 
             if (error) throw error;
+
+            // 2. INITIALIZE DASHBOARD (The Missing Piece)
+            // This creates a row with 0s if it doesn't exist, 
+            // so the Dashboard Screen doesn't return 'null' anymore.
+            const { error: dashError } = await supabase
+                .from('manager_dashboard')
+                .upsert({
+                    user_id: user.id,
+                    // We only set the user_id on initial creation. 
+                    // If it exists, it won't overwrite existing stats.
+                }, { onConflict: 'user_id' })
+                .select();
+
+            if (dashError) console.error("Dashboard Init Error:", dashError);
+
             Alert.alert("Success", "Shop profile updated!");
         } catch (error: any) {
+            // Detailed log to see exactly what string failed
+            console.error("Payload Error:", error);
             Alert.alert("Error", error.message);
         } finally { setLoading(false); }
     };
@@ -137,6 +167,8 @@ export default function ManagerSettingsScreen() {
     const formatDisplayTime = (date: Date) => {
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
+
+
 
     return (
         <ManagerLayout
@@ -292,11 +324,6 @@ export default function ManagerSettingsScreen() {
                     </View>
                     {/* ======================================================== */}
                 </View>
-
-
-
-
-
 
                 <View style={[styles.card, { flex: isMobile ? 0 : 1 }]}>
                     <Text style={styles.sectionTitle}>Preferences</Text>

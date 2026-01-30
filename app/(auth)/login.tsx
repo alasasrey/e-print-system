@@ -37,7 +37,7 @@ export default function LoginScreen() {
             const { data: userProfile, error: profileError } = await supabase
                 .from('e_print_users') // matches your screenshot
                 .select('role, student_id, fullname')
-                .eq('auth_user_id', authUser.id)
+                .eq('supabase_user_id', authUser.id)
                 .single();
 
             if (profileError) {

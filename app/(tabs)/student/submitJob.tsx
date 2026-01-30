@@ -23,6 +23,7 @@ interface Shop {
     print_shop_id: number;
     name: string;
     address: string;
+    contact_number: string;
     is_active: boolean;
 }
 
@@ -38,10 +39,6 @@ const colorData: DropdownItem[] = [
     { label: "Black & White", value: "bw" },
     { label: "Color", value: "color" },
 ];
-
-//PLEASE FINISH THIS CODE!!!
-// TODO: CHANGE THIS CODE TO THE SUPABASE CODE!!!!!
-
 
 export default function SubmitJobScreen() {
     const [visible, setVisible] = useState(false);
@@ -97,44 +94,49 @@ export default function SubmitJobScreen() {
         }
     };
 
+    const handleNumberChange = (text: string, setter: (val: string) => void) => {
+        const cleaned = text.replace(/[^0-9]/g, "");
+        setter(cleaned);
+    };
+
     const handleSubmit = async () => {
         if (!file || !selectedPrintShop) {
-            Alert.alert("Error", "Missing file or print shop");
+            Alert.alert("Error", "Please select a file and a print shop.");
             return;
         }
 
         try {
-            // 1. Get current Auth User
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("No user found");
+            setLoading(true);
 
-            // 2. Upload file to Supabase Storage
+            // Get Auth User
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            if (userError || !user) throw new Error("You must be logged in to submit a job");
+
+            // Prepare file metadata
             const fileExt = file.name.split('.').pop();
-            const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-            const filePath = `print_jobs/${fileName}`;
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const filePath = `${user.id}/${fileName}`;
 
-            let fileBody;
-            if (Platform.OS === 'web') {
-                const response = await fetch(file.uri);
-                fileBody = await response.blob();
-            } else {
-                // For mobile, you might need to convert to base64 or use a FileSystem helper
-                const response = await fetch(file.uri);
-                fileBody = await response.blob();
-            }
+            // Convert URI to Blob (Reliable for Expo)
+            const response = await fetch(file.uri);
+            const blob = await response.blob();
 
+            // 1. Upload to 'print_files' bucket
             const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('documents') // Ensure you created a 'documents' bucket in Supabase
-                .upload(filePath, fileBody);
+                .from('print_files')
+                .upload(filePath, blob, {
+                    contentType: file.mimeType || 'application/octet-stream',
+                    upsert: true,
+                });
 
             if (uploadError) throw uploadError;
 
-            // 3. Get Public URL for the file
+            // 2. Get the Public URL
             const { data: { publicUrl } } = supabase.storage
-                .from('documents')
+                .from('print_files')
                 .getPublicUrl(filePath);
 
-            // 4. Insert Job Record into 'print_jobs'
+            // 3. Insert into 'print_jobs' table (Matching Screenshot 145)
             const { error: insertError } = await supabase
                 .from('print_jobs')
                 .insert([{
@@ -142,31 +144,29 @@ export default function SubmitJobScreen() {
                     print_shop_id: selectedPrintShop.id,
                     file_name: file.name,
                     file_url: publicUrl,
-                    file_type: file.mimeType || fileExt,
-                    pages: parseInt(pages),
-                    copies: parseInt(copies),
+                    file_type: fileExt,
+                    pages: parseInt(pages) || 0,
+                    copies: parseInt(copies) || 1,
                     paper_size: paperSize,
                     color_mode: colorMode,
                     orientation: orientation,
                     binding: binding,
                     notes: notes,
-                    status: 'pending',
-                    payment_stat: 'unpaid'
+                    status: 'pending', // Default from schema
+                    payment_stat: 'unpaid', // Default from schema
+                    total_price: 0 // You can calculate this based on shop rates later
                 }]);
 
             if (insertError) throw insertError;
 
-            Alert.alert("Success", "Job submitted successfully!");
+            Alert.alert("Success", "Print job submitted!");
             router.push("/(tabs)/student/orders");
-        } catch (error: any) {
-            console.error("Submission Error:", error.message);
-            Alert.alert("Error", error.message || "Failed to submit job");
-        }
-    };
 
-    const handleNumberChange = (text: string, setter: (val: string) => void) => {
-        const cleaned = text.replace(/[^0-9]/g, "");
-        setter(cleaned);
+        } catch (error: any) {
+            Alert.alert("Submission Error", error.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
