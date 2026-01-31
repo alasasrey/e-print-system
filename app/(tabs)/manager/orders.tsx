@@ -1,449 +1,69 @@
-// //TODO: PLEASE FIX THIS CODE!!!
-
-// import { ManagerLayout } from "@/components/ManagerLayout";
-// import axiosInstance from "@/utils/axiosInstance";
-// import { Ionicons } from "@expo/vector-icons";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
-// import React, { useEffect, useState } from "react";
-// import {
-//     Alert,
-//     Platform,
-//     ScrollView,
-//     StyleSheet,
-//     Text,
-//     TouchableOpacity,
-//     View,
-//     useWindowDimensions,
-// } from "react-native";
-
-// // //TODO: PLEASE FIX THIS CODE!!!
-// // //PLEASE FINISH THIS CODE!!!
-// // TODO: CHANGE THIS CODE TO THE SUPABASE CODE!!!!!
-
-
-// interface Order {
-//     user_id: number;
-//     print_shop_id: number;
-//     file_name?: string;
-//     file_url?: string;
-//     file_type?: string;
-//     copies: number;
-//     pages: number;
-//     paper_size: string;
-//     color_mode: string;
-//     binding: string;
-//     notes?: string;
-//     status: string;
-//     payment_status: string | number;
-//     total_price: string | number;
-// }
-
-// const ORDER_STATUS_CONFIG: any = {
-//     pending: { label: "Pending", color: "#FFB020", icon: "alert-circle-outline" },
-//     processing: { label: "Processing", color: "#3B82F6", icon: "print-outline" },
-//     ready: { label: "Ready", color: "#10B981", icon: "cube-outline" },
-//     completed: {
-//         label: "Completed",
-//         color: "#059669",
-//         icon: "checkmark-done-circle-outline",
-//     },
-//     declined: {
-//         label: "Declined",
-//         color: "#FF5252",
-//         icon: "close-circle-outline",
-//     },
-// };
-
-// export default function ManagerOrdersScreen() {
-//     const { width } = useWindowDimensions();
-//     const isMobile = width < 768;
-//     const [orders, setOrders] = useState<Order[]>([]);
-
-//     const fetchOrders = async () => {
-//         try {
-//             const userId = await AsyncStorage.getItem("userId"); // Ensure you import AsyncStorage
-//             if (!userId) return;
-
-//             const response = await axiosInstance.get(`/manager-orders/${userId}`);
-//             setOrders(Array.isArray(response.data) ? response.data : []);
-//         } catch (err) {
-//             console.error("Error fetching orders:", err);
-//         }
-//     };
-
-//     useEffect(() => {
-//         fetchOrders();
-//     }, []);
-
-//     // Helper to determine color based on status
-//     const getStatusColor = (status: string) => {
-//         switch (status.toLowerCase()) {
-//             case "pending":
-//                 return "#FFB020";
-//             case "processing":
-//                 return "#3B82F6";
-//             case "ready":
-//                 return "#10B981";
-//             case "completed":
-//                 return "#059669";
-//             default:
-//                 return "#666";
-//         }
-//     };
-
-//     // --- NEW FUNCTION TO HANDLE API CALL ---
-//     const handleUpdateStatus = async (orderId: number, newStatus: string) => {
-//         try {
-//             // Adjust the endpoint based on your backend API
-//             await axiosInstance.put(`/update-order-status/${orderId}`, {
-//                 status: newStatus,
-//             });
-
-//             // Refresh the list to show updated status
-//             fetchOrders();
-//         } catch (err) {
-//             console.error("Error updating status:", err);
-//             alert("Failed to update order status.");
-//         }
-//     };
-
-//     const handleDecline = (orderId: number) => {
-//         Alert.alert(
-//             "Decline Order",
-//             "Are you sure you want to decline this job? This will notify the customer.",
-//             [
-//                 { text: "Cancel", style: "cancel" },
-//                 {
-//                     text: "Decline",
-//                     style: "destructive",
-//                     onPress: () => handleUpdateStatus(orderId, "declined"),
-//                 },
-//             ],
-//         );
-//     };
-
-//     return (
-
-//         <ManagerLayout currentRoute="orders" title="Order Dashboard">
-//             <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
-//                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 20 }}>
-//                     {orders.length > 0 ? (
-//                         orders.map((order: any) => (
-//                             <OrderCard
-//                                 key={order.id}
-//                                 id={order.id} // Pass the raw ID
-//                                 status={order.status}
-//                                 statusColor={getStatusColor(order.status)}
-//                                 title={order.file_name || "Untitled Job"}
-//                                 price={`₱${parseFloat(order.total_price).toFixed(2)}`}
-//                                 orderId={`ORD-${order.id}`}
-//                                 details={{
-//                                     pages: `${order.copies} x ${order.pages}`,
-//                                     size: order.paper_size,
-//                                     mode: order.color_mode,
-//                                     binding: order.binding,
-//                                 }}
-//                                 isMobile={isMobile}
-//                                 onUpdateStatus={handleUpdateStatus} // Pass the function here
-//                                 onHandleDecline={handleDecline} // Pass the function here too
-//                             />
-//                         ))
-//                     ) : (
-//                         <Text
-//                             style={{
-//                                 textAlign: "center",
-//                                 width: "100%",
-//                                 marginTop: 50,
-//                                 color: "#888",
-//                             }}
-//                         >
-//                             No orders found.
-//                         </Text>
-//                     )}
-//                 </View>
-//             </ScrollView>
-//         </ManagerLayout>
-//     );
-// }
-
-// const SidebarItem = ({ icon, label, onPress, active }: any) => (
-//     <TouchableOpacity
-//         onPress={onPress}
-//         style={[
-//             navStyles.drawerItem,
-//             active && navStyles.activeItem,
-//             { cursor: "pointer" } as any,
-//         ]}
-//     >
-//         <Ionicons name={icon} size={20} color={active ? "white" : "#666"} />
-//         <Text style={[navStyles.drawerText, { color: active ? "white" : "#666" }]}>
-//             {label}
-//         </Text>
-//     </TouchableOpacity>
-// );
-
-// const OrderCard = ({
-//     id, // Make sure to receive the raw numeric ID
-//     status,
-//     statusColor,
-//     title,
-//     price,
-//     orderId,
-//     details,
-//     isMobile,
-//     onUpdateStatus, // Add this prop
-//     onHandleDecline
-// }: any) => {
-//     const currentStatus = status?.toLowerCase();
-//     const isPending = currentStatus === "pending";
-//     const isProcessing = currentStatus === "processing";
-//     const isReady = currentStatus === "ready";
-
-//     return (
-//         <View style={[styles.card, { width: isMobile ? "100%" : "48%" }]}>
-//             <View
-//                 style={{
-//                     flexDirection: "row",
-//                     justifyContent: "space-between",
-//                     alignItems: "flex-start",
-//                 }}
-//             >
-//                 <View style={[styles.badge, { backgroundColor: statusColor }]}>
-//                     <Ionicons
-//                         name={
-//                             isPending
-//                                 ? "alert-circle-outline"
-//                                 : isProcessing
-//                                     ? "print-outline"
-//                                     : "cube-outline"
-//                         }
-//                         size={12}
-//                         color="white"
-//                     />
-//                     <Text style={styles.badgeText}>{status}</Text>
-//                 </View>
-//                 <View style={{ alignItems: "flex-end" }}>
-//                     <Text style={styles.price}>{price}</Text>
-//                     <Text style={styles.orderId}>{orderId}</Text>
-//                 </View>
-//             </View>
-
-//             <Text style={styles.title}>{title}</Text>
-
-//             <View style={styles.detailsGrid}>
-//                 <DetailItem label="Copies x Pages" value={details.pages} />
-//                 <DetailItem label="Paper Size" value={details.size} />
-//                 <DetailItem label="Color Mode" value={details.mode} />
-//                 <DetailItem label="Binding" value={details.binding} />
-//             </View>
-
-//             {/* ACTION AREA */}
-//             {isPending ? (
-//                 <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}>
-//                     <TouchableOpacity style={[styles.actionButton, styles.declineButton]}>
-//                         <Text
-//                             style={styles.declineText}
-//                             onPress={() => onHandleDecline(id)} // CALL DECLINE
-//                         >
-//                             Decline
-//                         </Text>
-//                     </TouchableOpacity>
-//                     <TouchableOpacity style={[styles.actionButton, styles.acceptButton]}>
-//                         <Text
-//                             style={styles.acceptText}
-//                             onPress={() => onUpdateStatus(id, "processing")} // CALL ACCEPT
-//                         >
-//                             Accept Job
-//                         </Text>
-//                     </TouchableOpacity>
-//                 </View>
-//             ) : (
-
-//                 <TouchableOpacity
-//                     onPress={() => {
-//                         // Logic to move from Processing -> Ready -> Completed
-//                         if (isProcessing) onUpdateStatus(id, "ready");
-//                         else if (isReady) onUpdateStatus(id, "completed");
-//                     }}
-//                     style={[
-//                         styles.statusBox,
-//                         {
-//                             backgroundColor: isReady ? "#E8F9F1" : "#EBF5FF",
-//                             borderColor: isReady ? "#C6F6D5" : "#BEE3F8",
-//                         },
-//                     ]}
-//                 >
-//                     <Text
-//                         style={[
-//                             styles.statusTitle,
-//                             { color: isReady ? "#22543D" : "#2B6CB0" },
-//                         ]}
-//                     >
-//                         {isReady ? "✓ Ready for Pickup" : "Printing in Progress..."}
-//                     </Text>
-//                     <Text style={styles.statusSub}>
-//                         {isReady
-//                             ? "Click to mark as Completed."
-//                             : "Click to mark as Ready."}
-//                     </Text>
-//                 </TouchableOpacity>
-//             )}
-//         </View>
-//     );
-// };
-
-// const DetailItem = ({ label, value }: any) => (
-//     <View style={{ width: "25%", marginBottom: 10 }}>
-//         <Text style={styles.detailLabel}>{label}</Text>
-//         <Text style={styles.detailValue}>{value}</Text>
-//     </View>
-// );
-
-// // STYLES
-// const navStyles = StyleSheet.create({
-//     sidebar: {
-//         width: 250,
-//         backgroundColor: "#FFF",
-//         borderRightWidth: 1,
-//         borderRightColor: "#EEE",
-//         paddingTop: 20,
-//         height: "100%",
-//         zIndex: 100,
-//     },
-//     header: {
-//         height: 60,
-//         backgroundColor: "#FFF",
-//         flexDirection: "row",
-//         justifyContent: "space-between",
-//         alignItems: "center",
-//         paddingHorizontal: 20,
-//         borderBottomWidth: 1,
-//         borderBottomColor: "#EEE",
-//     },
-//     drawerItem: {
-//         flexDirection: "row",
-//         alignItems: "center",
-//         padding: 12,
-//         marginHorizontal: 10,
-//         borderRadius: 8,
-//         marginBottom: 5,
-//     },
-//     activeItem: { backgroundColor: "#0A0A1B" },
-//     drawerText: { marginLeft: 12, fontWeight: "600" },
-// });
-
-// const styles = StyleSheet.create({
-//     card: {
-//         backgroundColor: "#FFF",
-//         borderRadius: 16,
-//         padding: 20,
-//         borderWidth: 1,
-//         borderColor: "#EEE",
-//         ...Platform.select({
-//             android: { elevation: 3 },
-//             web: { boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)" },
-//         }),
-//     },
-//     badge: {
-//         flexDirection: "row",
-//         alignItems: "center",
-//         paddingHorizontal: 10,
-//         paddingVertical: 4,
-//         borderRadius: 6,
-//     },
-//     badgeText: {
-//         color: "white",
-//         fontSize: 12,
-//         fontWeight: "bold",
-//         marginLeft: 4,
-//     },
-//     price: { fontSize: 20, fontWeight: "bold" },
-//     orderId: { fontSize: 12, color: "#888" },
-//     title: { fontSize: 18, fontWeight: "bold", marginTop: 10 },
-//     detailsGrid: {
-//         flexDirection: "row",
-//         flexWrap: "wrap",
-//         borderTopWidth: 1,
-//         borderTopColor: "#F5F5F5",
-//         paddingTop: 15,
-//         marginTop: 15,
-//     },
-//     detailLabel: { fontSize: 10, color: "#AAA" },
-//     detailValue: { fontSize: 12, fontWeight: "500" },
-//     actionButton: {
-//         flex: 1,
-//         height: 45,
-//         borderRadius: 8,
-//         justifyContent: "center",
-//         alignItems: "center",
-//         borderWidth: 1,
-//     },
-//     acceptButton: { backgroundColor: "#0A0A1B", borderColor: "#0A0A1B" },
-//     acceptText: { color: "white", fontWeight: "bold" },
-//     declineButton: { backgroundColor: "white", borderColor: "#EEE" },
-//     declineText: { color: "#FF5252", fontWeight: "bold" },
-//     statusBox: { marginTop: 15, padding: 15, borderRadius: 10, borderWidth: 1 },
-//     statusTitle: { fontWeight: "bold", fontSize: 14 },
-//     statusSub: { fontSize: 12, marginTop: 4, color: "#666" },
-// });
-
-
-
 import { ManagerLayout } from "@/components/ManagerLayout";
-import { supabase } from "@/lib/supabase"; // Ensure this is configured
+import { supabase } from "@/lib/supabase";
 import React, { useEffect, useState } from "react";
 import {
+    ActivityIndicator,
     Alert,
-    Platform,
+    Modal,
     ScrollView,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
-    useWindowDimensions,
+    useWindowDimensions
 } from "react-native";
 
 interface Order {
     id: number;
     user_id: string;
-    print_shop_id: number;
     file_name: string;
-    file_url: string;
-    file_type: string;
     copies: number;
-    pages: number;
+    pages: number; // Added from your image reference
+    status: string;
+    total_price: number;
+    student_name?: string;
     paper_size: string;
     color_mode: string;
     binding: string;
     notes: string;
-    status: string;
-    payment_status: string;
-    total_price: number;
+    payment_status: string; // From screenshot
+    file_url: string;
+    print_shop_name: string;
 }
 
 export default function ManagerOrdersScreen() {
     const { width } = useWindowDimensions();
-    const isMobile = width < 768;
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Modal State
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [isModalVisible, setIsModalVisible] = useState(false);
 
     const fetchOrders = async () => {
         try {
             setLoading(true);
-            // 1. Get the current logged-in manager
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            // 2. Fetch jobs. 
-            // Note: In Supabase, you'd usually filter by print_shop_id 
-            // but here we filter where user_id matches or via a join
+            // Fetch jobs and join with users table to get the name
             const { data, error } = await supabase
                 .from('print_jobs')
-                .select('*')
+                .select(`
+                    *,
+                    student:user_id ( fullname ), shop:print_shop_id ( name )
+                `)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
-            setOrders(data || []);
+
+            // Map the joined data to our Order interface
+            const formattedOrders = data.map((job: any) => ({
+                ...job,
+                // This will show the ID if student is null, helping you debug
+                student_name: job.student?.fullname || `User (${job.user_id.slice(0, 5)}...)` || "Unknown Student",
+                print_shop_name: job.shop?.name || `User (${job.print_shop_id.slice(0, 5)}...)` || "Unknown Shop",
+            }));
+
+            setOrders(formattedOrders);
         } catch (err) {
             console.error("Error fetching orders:", err);
         } finally {
@@ -451,20 +71,7 @@ export default function ManagerOrdersScreen() {
         }
     };
 
-    useEffect(() => {
-        fetchOrders();
-    }, []);
-
-    const getStatusColor = (status: string) => {
-        switch (status?.toLowerCase()) {
-            case "pending": return "#FFB020";
-            case "processing": return "#3B82F6";
-            case "ready": return "#10B981";
-            case "completed": return "#059669";
-            case "declined": return "#FF5252";
-            default: return "#666";
-        }
-    };
+    useEffect(() => { fetchOrders(); }, []);
 
     const handleUpdateStatus = async (orderId: number, newStatus: string) => {
         try {
@@ -472,170 +79,288 @@ export default function ManagerOrdersScreen() {
                 .from('print_jobs')
                 .update({ status: newStatus })
                 .eq('id', orderId);
-
             if (error) throw error;
-
-            // Optimistic Update or Refresh
             fetchOrders();
         } catch (err) {
-            console.error("Error updating status:", err);
-            Alert.alert("Error", "Failed to update order status.");
+            Alert.alert("Error", "Failed to update status.");
         }
     };
 
-    const handleDecline = (orderId: number) => {
+    const showFullDetails = (order: Order) => {
         Alert.alert(
-            "Decline Order",
-            "Are you sure you want to decline this job?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Decline",
-                    style: "destructive",
-                    onPress: () => handleUpdateStatus(orderId, "declined"),
-                },
-            ]
+            "Order Specifications",
+            `📄 File: ${order.file_name}\n📏 Size: ${order.paper_size}\n🎨 Mode: ${order.color_mode}\n🔗 Binding: ${order.binding}\n📝 Notes: ${order.notes || 'None'}`,
+            [{ text: "Close" }]
         );
     };
 
+    const openDetails = (order: Order) => {
+        setSelectedOrder(order);
+        setIsModalVisible(true);
+    };
+
+    const getStatusStyles = (status: string) => {
+        switch (status?.toLowerCase()) {
+            case "pending": return { bg: "#FFF4E5", text: "#B76E00" };
+            case "processing": return { bg: "#EBF5FF", text: "#3B82F6" };
+            case "ready": return { bg: "#E8F9F1", text: "#10B981" };
+            case "completed": return { bg: "#ECFDF5", text: "#059669" };
+            case "declined": return { bg: "#FEE2E2", text: "#EF4444" };
+            default: return { bg: "#F3F4F6", text: "#6B7280" };
+        }
+    };
+
     return (
-        <ManagerLayout currentRoute="orders" title="Order Dashboard">
-            <ScrollView contentContainerStyle={{ padding: isMobile ? 15 : 30 }}>
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 20 }}>
-                    {orders.length > 0 ? (
-                        orders.map((order) => (
-                            <OrderCard
-                                key={order.id}
-                                id={order.id}
-                                status={order.status}
-                                statusColor={getStatusColor(order.status)}
-                                title={order.file_name || "Untitled Job"}
-                                price={`₱${Number(order.total_price).toFixed(2)}`}
-                                orderId={`ORD-${order.id}`}
-                                details={{
-                                    pages: `${order.copies} x ${order.pages}`,
-                                    size: order.paper_size,
-                                    mode: order.color_mode,
-                                    binding: order.binding,
-                                }}
-                                isMobile={isMobile}
-                                onUpdateStatus={handleUpdateStatus}
-                                onHandleDecline={handleDecline}
-                            />
-                        ))
-                    ) : (
-                        <Text style={styles.emptyText}>
-                            {loading ? "Loading orders..." : "No orders found."}
-                        </Text>
-                    )}
+        <ManagerLayout currentRoute="orders" title="Order Management">
+            <View style={styles.container}>
+                <View style={styles.headerRow}>
+                    <Text style={styles.headerSubtitle}>Manage all incoming and active print jobs.</Text>
                 </View>
-            </ScrollView>
+
+                <View style={styles.tableCard}>
+                    <View style={styles.tableActionHeader}>
+                        <Text style={styles.tableTitle}>Current Orders</Text>
+                        <TouchableOpacity onPress={fetchOrders}>
+                            <Text style={styles.refreshText}>Refresh</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* TABLE HEADER */}
+                    <View style={styles.columnHeader}>
+                        <Text style={[styles.columnHeaderText, { flex: 1 }]}>ID</Text>
+                        <Text style={[styles.columnHeaderText, { flex: 2 }]}>STUDENT</Text>
+                        <Text style={[styles.columnHeaderText, { flex: 2 }]}>JOB NAME</Text>
+                        <Text style={[styles.columnHeaderText, { flex: 2 }]}>COPIES</Text>
+                        <Text style={[styles.columnHeaderText, { flex: 1.5 }]}>STATUS</Text>
+                        <Text style={[styles.columnHeaderText, { flex: 1 }]}>TOTAL</Text>
+                        <Text style={[styles.columnHeaderText, { flex: 2.5, textAlign: 'center' }]}>ACTIONS</Text>
+                    </View>
+
+                    <ScrollView>
+                        {loading ? (
+                            <ActivityIndicator size="large" color="#3B82F6" style={{ marginTop: 40 }} />
+                        ) : orders.length > 0 ? (
+                            orders.map((order) => {
+                                const statusStyle = getStatusStyles(order.status);
+                                const status = order.status.toLowerCase();
+
+                                return (
+                                    <View key={order.id} style={styles.row}>
+                                        <Text style={[styles.cellText, { flex: 1 }]}>#{order.id}</Text>
+                                        <Text style={[styles.cellText, { flex: 2, fontWeight: '600' }]}>{order.student_name}</Text>
+                                        <Text style={[styles.cellText, { flex: 2 }]} numberOfLines={1}>{order.file_name}</Text>
+                                        <Text style={[styles.cellText, { flex: 2 }]} numberOfLines={1}>{order.copies}</Text>
+
+                                        <View style={{ flex: 1.5 }}>
+                                            <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
+                                                <Text style={[styles.statusText, { color: statusStyle.text }]}>
+                                                    {order.status.toUpperCase()}
+                                                </Text>
+                                            </View>
+                                        </View>
+
+                                        <Text style={[styles.cellText, { flex: 1, fontWeight: 'bold', color: '#111827' }]}>
+                                            ₱{Number(order.total_price).toFixed(2)}
+                                        </Text>
+
+                                        <View style={[styles.actionCell, { flex: 2.5 }]}>
+                                            {/* Details is always visible */}
+                                            <TouchableOpacity style={[styles.btn, styles.btnDetails]} onPress={() => openDetails(order)}>
+                                                <Text style={styles.btnTextDetails}>View Details</Text>
+                                            </TouchableOpacity>
+
+                                            {/* Conditional Logic for workflow */}
+                                            {status === 'pending' && (
+                                                <>
+                                                    <TouchableOpacity
+                                                        style={[styles.btn, styles.btnApprove]}
+                                                        onPress={() => handleUpdateStatus(order.id, 'processing')}
+                                                    >
+                                                        <Text style={styles.btnTextWhite}>Accept</Text>
+                                                    </TouchableOpacity>
+
+                                                    <TouchableOpacity
+                                                        style={[styles.btn, styles.btnReject]}
+                                                        onPress={() => handleUpdateStatus(order.id, 'declined')}
+                                                    >
+                                                        <Text style={styles.btnTextWhite}>Reject</Text>
+                                                    </TouchableOpacity>
+                                                </>
+
+                                            )}
+
+                                            {status === 'processing' && (
+                                                <TouchableOpacity
+                                                    style={[styles.btn, styles.btnReady]}
+                                                    onPress={() => handleUpdateStatus(order.id, 'ready')}
+                                                >
+                                                    <Text style={styles.btnTextWhite}>Mark Ready</Text>
+                                                </TouchableOpacity>
+                                            )}
+
+                                        </View>
+                                    </View>
+                                );
+                            })
+                        ) : (
+                            <Text style={styles.emptyText}>No orders found.</Text>
+                        )}
+                    </ScrollView>
+                </View>
+
+
+                {/* --- DETAILS MODAL --- */}
+                <Modal visible={isModalVisible} transparent animationType="fade">
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <View style={styles.modalHeader}>
+                                <View>
+                                    <Text style={styles.modalTitle}>View Details</Text>
+                                    <Text style={styles.modalSubtitle}>This are the details</Text>
+                                </View>
+                                <TouchableOpacity onPress={() => setIsModalVisible(false)}>
+                                    <Text style={{ fontSize: 20 }}>✕</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            <View style={styles.modalBody}>
+                                {/* Left Column: Info */}
+                                <View style={styles.modalColumn}>
+                                    <Text style={styles.label}>Student Name</Text>
+                                    <TextInput style={styles.input} value={selectedOrder?.student_name} editable={false} />
+
+                                    <Text style={styles.label}>Shop Name</Text>
+                                    <TextInput style={styles.input} value={selectedOrder?.print_shop_name} editable={false} />
+
+                                    <Text style={styles.modalSectionTitle}>Print Configuration</Text>
+                                    <View style={styles.rowGap}>
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={styles.label}>Copies</Text>
+                                            <TextInput style={styles.input} value={selectedOrder?.copies.toString()} editable={false} />
+                                        </View>
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={styles.label}>Pages</Text>
+                                            <TextInput style={styles.input} value={selectedOrder?.pages?.toString() || "All"} editable={false} />
+                                        </View>
+                                    </View>
+
+                                    <Text style={styles.label}>Paper Size</Text>
+                                    <TextInput style={styles.input} value={selectedOrder?.paper_size} editable={false} />
+
+                                    <Text style={styles.label}>Color</Text>
+                                    <TextInput style={styles.input} value={selectedOrder?.color_mode} editable={false} />
+                                </View>
+
+                                {/* Right Column: File & Cost */}
+                                <View style={[styles.modalColumn, { marginLeft: 20 }]}>
+                                    <Text style={styles.label}>Uploaded Document</Text>
+                                    <View style={styles.fileBox}>
+                                        <Text style={{ flex: 1, fontSize: 12 }} numberOfLines={1}>{selectedOrder?.file_name}</Text>
+                                        <TouchableOpacity>
+                                            <Text style={{ color: '#3B82F6' }}>📥</Text>
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    <View style={styles.priceContainer}>
+                                        <Text style={styles.priceLabel}>Cost</Text>
+                                        <Text style={styles.priceValue}>Php{Number(selectedOrder?.total_price).toFixed(2)}</Text>
+                                    </View>
+
+                                    <Text style={styles.label}>Payment Reference ID</Text>
+                                    <TextInput style={styles.input} placeholder="Ref no. 123456789" />
+
+                                    <Text style={styles.label}>Status</Text>
+                                    <TextInput style={styles.input} value={selectedOrder?.payment_status?.toUpperCase()} editable={false} />
+
+                                    <Text style={styles.label}>Notes</Text>
+                                    <TextInput style={[styles.input, { height: 60 }]} multiline value={selectedOrder?.notes} editable={false} />
+                                </View>
+                            </View>
+
+                            <TouchableOpacity style={styles.modalOkBtn} onPress={() => setIsModalVisible(false)}>
+                                <Text style={styles.modalOkText}>OK</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+
+            </View>
         </ManagerLayout>
     );
 }
 
-// OrderCard component remains largely the same but uses the new status logic
-const OrderCard = ({ id, status, statusColor, title, price, orderId, details, isMobile, onUpdateStatus, onHandleDecline }: any) => {
-    const currentStatus = status?.toLowerCase();
-
-    return (
-        <View style={[styles.card, { width: isMobile ? "100%" : "48%" }]}>
-            <View style={styles.cardHeader}>
-                <View style={[styles.badge, { backgroundColor: statusColor }]}>
-                    <Text style={styles.badgeText}>{status.toUpperCase()}</Text>
-                </View>
-                <View style={{ alignItems: "flex-end" }}>
-                    <Text style={styles.price}>{price}</Text>
-                    <Text style={styles.orderId}>{orderId}</Text>
-                </View>
-            </View>
-
-            <Text style={styles.title}>{title}</Text>
-
-            <View style={styles.detailsGrid}>
-                <DetailItem label="Copies x Pages" value={details.pages} />
-                <DetailItem label="Paper Size" value={details.size} />
-                <DetailItem label="Color Mode" value={details.mode} />
-                <DetailItem label="Binding" value={details.binding} />
-            </View>
-
-            {currentStatus === "pending" ? (
-                <View style={styles.actionRow}>
-                    <TouchableOpacity
-                        style={[styles.actionButton, styles.declineButton]}
-                        onPress={() => onHandleDecline(id)}
-                    >
-                        <Text style={styles.declineText}>Decline</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.actionButton, styles.acceptButton]}
-                        onPress={() => onUpdateStatus(id, "processing")}
-                    >
-                        <Text style={styles.acceptText}>Accept Job</Text>
-                    </TouchableOpacity>
-                </View>
-            ) : currentStatus !== "completed" && currentStatus !== "declined" ? (
-                <TouchableOpacity
-                    onPress={() => {
-                        if (currentStatus === "processing") onUpdateStatus(id, "ready");
-                        else if (currentStatus === "ready") onUpdateStatus(id, "completed");
-                    }}
-                    style={[
-                        styles.statusBox,
-                        {
-                            backgroundColor: currentStatus === "ready" ? "#E8F9F1" : "#EBF5FF",
-                            borderColor: currentStatus === "ready" ? "#C6F6D5" : "#BEE3F8",
-                        },
-                    ]}
-                >
-                    <Text style={[styles.statusTitle, { color: currentStatus === "ready" ? "#22543D" : "#2B6CB0" }]}>
-                        {currentStatus === "ready" ? "✓ Ready for Pickup" : "Printing in Progress..."}
-                    </Text>
-                    <Text style={styles.statusSub}>
-                        {currentStatus === "ready" ? "Click to mark as Completed." : "Click to mark as Ready."}
-                    </Text>
-                </TouchableOpacity>
-            ) : null}
-        </View>
-    );
-};
-
-const DetailItem = ({ label, value }: any) => (
-    <View style={{ width: "25%", marginBottom: 10 }}>
-        <Text style={styles.detailLabel}>{label}</Text>
-        <Text style={styles.detailValue}>{value || "N/A"}</Text>
-    </View>
-);
-
 const styles = StyleSheet.create({
-    card: {
+    container: { flex: 1, backgroundColor: "#F9FAFB", padding: 25 },
+    headerRow: { marginBottom: 20 },
+    headerSubtitle: { color: "#666", fontSize: 14 },
+    tableCard: {
         backgroundColor: "#FFF",
-        borderRadius: 16,
-        padding: 20,
+        borderRadius: 12,
         borderWidth: 1,
-        borderColor: "#EEE",
-        ...Platform.select({
-            android: { elevation: 3 },
-            web: { boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)" },
-        }),
+        borderColor: "#E5E7EB",
+        paddingBottom: 10,
+        flex: 1,
     },
-    cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-    badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
-    badgeText: { color: "white", fontSize: 10, fontWeight: "bold" },
-    price: { fontSize: 20, fontWeight: "bold" },
-    orderId: { fontSize: 12, color: "#888" },
-    title: { fontSize: 18, fontWeight: "bold", marginTop: 10 },
-    detailsGrid: { flexDirection: "row", flexWrap: "wrap", borderTopWidth: 1, borderTopColor: "#F5F5F5", paddingTop: 15, marginTop: 15 },
-    detailLabel: { fontSize: 10, color: "#AAA" },
-    detailValue: { fontSize: 12, fontWeight: "500" },
-    actionRow: { flexDirection: "row", gap: 10, marginTop: 20 },
-    actionButton: { flex: 1, height: 45, borderRadius: 8, justifyContent: "center", alignItems: "center", borderWidth: 1 },
-    acceptButton: { backgroundColor: "#0A0A1B", borderColor: "#0A0A1B" },
-    acceptText: { color: "white", fontWeight: "bold" },
-    declineButton: { backgroundColor: "white", borderColor: "#EEE" },
-    declineText: { color: "#FF5252", fontWeight: "bold" },
-    statusBox: { marginTop: 15, padding: 15, borderRadius: 10, borderWidth: 1 },
-    statusTitle: { fontWeight: "bold", fontSize: 14 },
-    statusSub: { fontSize: 12, marginTop: 4, color: "#666" },
-    emptyText: { textAlign: "center", width: "100%", marginTop: 50, color: "#888" }
+    tableActionHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        padding: 20,
+        alignItems: "center",
+    },
+    tableTitle: { fontSize: 16, fontWeight: "600", color: "#374151" },
+    refreshText: { color: "#666", fontSize: 13 },
+    columnHeader: {
+        flexDirection: "row",
+        backgroundColor: "#F9FAFB",
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: "#E5E7EB",
+    },
+    columnHeaderText: { fontSize: 11, fontWeight: "700", color: "#9CA3AF" },
+    row: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 20,
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: "#F3F4F6",
+    },
+    cellText: { fontSize: 13, color: "#4B5563" },
+    statusBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+        alignSelf: "flex-start",
+    },
+    statusText: { fontSize: 11, fontWeight: "600" },
+    actionCell: { flexDirection: "row", justifyContent: "center", gap: 8 },
+    btn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
+    btnApprove: { backgroundColor: "#3B82F6" },
+    btnReject: { backgroundColor: "#EF4444" },
+    btnReady: { backgroundColor: "#3B82F6" },
+    btnDetails: { backgroundColor: "#F3F4F6", borderWidth: 1, borderColor: "#E5E7EB" },
+    btnTextWhite: { color: "white", fontSize: 11, fontWeight: "600" },
+    btnTextDetails: { color: "#374151", fontSize: 11, fontWeight: "500" },
+    emptyText: { textAlign: "center", padding: 40, color: "#9CA3AF" },
+
+    // Modal Styles
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+    modalContent: { width: '70%', backgroundColor: 'white', borderRadius: 12, padding: 25 },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+    modalTitle: { fontSize: 20, fontWeight: '700' },
+    modalSubtitle: { fontSize: 12, color: '#666' },
+    modalBody: { flexDirection: 'row' },
+    modalColumn: { flex: 1 },
+    modalSectionTitle: { fontWeight: '700', marginTop: 15, marginBottom: 10, fontSize: 14 },
+    label: { fontSize: 12, fontWeight: '600', color: '#374151', marginBottom: 5, marginTop: 10 },
+    input: { borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 6, padding: 8, fontSize: 13, backgroundColor: '#F9FAFB' },
+    rowGap: { flexDirection: 'row', gap: 10 },
+    fileBox: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', padding: 10, borderRadius: 8, backgroundColor: '#F9FAFB' },
+    priceContainer: { alignItems: 'center', marginVertical: 20 },
+    priceLabel: { fontSize: 12, color: '#666' },
+    priceValue: { fontSize: 28, fontWeight: '800', color: '#3B82F6' },
+    modalOkBtn: { backgroundColor: '#3B82F6', padding: 12, borderRadius: 8, marginTop: 25, alignItems: 'center' },
+    modalOkText: { color: 'white', fontWeight: '700' }
 });

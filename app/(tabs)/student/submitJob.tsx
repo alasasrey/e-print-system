@@ -117,15 +117,15 @@ export default function SubmitJobScreen() {
             const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
             const filePath = `${user.id}/${fileName}`;
 
-            // Convert URI to Blob (Reliable for Expo)
+
+            // Replace your existing upload block with this:
             const response = await fetch(file.uri);
             const blob = await response.blob();
 
-            // 1. Upload to 'print_files' bucket
             const { data: uploadData, error: uploadError } = await supabase.storage
                 .from('print_files')
                 .upload(filePath, blob, {
-                    contentType: file.mimeType || 'application/octet-stream',
+                    contentType: file.mimeType || 'application/pdf', // Force a type if mimeType is missing
                     upsert: true,
                 });
 
@@ -153,7 +153,7 @@ export default function SubmitJobScreen() {
                     binding: binding,
                     notes: notes,
                     status: 'pending', // Default from schema
-                    payment_stat: 'unpaid', // Default from schema
+                    payment_status: 'unpaid', // Default from schema
                     total_price: 0 // You can calculate this based on shop rates later
                 }]);
 
@@ -163,7 +163,8 @@ export default function SubmitJobScreen() {
             router.push("/(tabs)/student/orders");
 
         } catch (error: any) {
-            Alert.alert("Submission Error", error.message);
+            console.log("FULL ERROR:", JSON.stringify(error, null, 2)); // Look at this in your terminal/console
+            Alert.alert("Submission Error", error.message || "Check console for details");
         } finally {
             setLoading(false);
         }
